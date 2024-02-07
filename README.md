@@ -13,8 +13,8 @@ The following repository contains:
 - **BEYOND analysis and validations**: Applying BEYOND methodology steps over our cell atlas.
 - **Manuscript figure and supplementary tables code**: The complete code generating all figures, extended data figures and supplementary tables shown in the manuscript
 
-Please refer to the readme file of each folder for more details
-
+> [!NOTE]
+> The code within each folder runs under the assumption that the code of the previous folder was executed and generated the necessary data files. Please refer to the readme file of each folder for more details
 
 ## Citation
 - Green G. S., F. M., Yang H-S., Taga M., McCabe C., Cain A., White C. C., Schmidtner A. K., Zeng L., Wang Y., Regev A., Menon V., Bennett D. A, Habib N., De Jager P. L. Cellular dynamics across aged human brains uncover a multicellular cascade leading to Alzheimer’s disease. Preprint from bioRvix (2023). <a href="https://www.biorxiv.org/content/10.1101/2023.03.07.531493v1">doi:10.1101/2023.03.07.531493</a>
