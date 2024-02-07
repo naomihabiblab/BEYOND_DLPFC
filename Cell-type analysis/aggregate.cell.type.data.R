@@ -13,7 +13,7 @@ safe.remove <- function(n, f=file) {
            })
 }
 
-file <- "Cell-type analysis/500.h5"
+file <- "Cell-type analysis/DLPFC.Green.atlas.h5"
 
 if(FALSE) {
   h5createFile(file)
@@ -198,7 +198,7 @@ params <- list(
     Inh.15=c(.9,.9),
     Inh.16=c(1,.925)
   ),
-  endo = list(
+  vascular.niche = list(
     End.1=c(.935,.95),
     End.2=c(2,.925),
     End.3=c(2,.97),
@@ -483,7 +483,7 @@ rm(summarise.expression, name, objs, states, by.donor)
 
 source("utils/signatures.R")
 
-for(ct in c("microglia","astrocytes","oligodendroglia","endo")) {
+for(ct in c("microglia","astrocytes","oligodendroglia","vascular.niche")) {
   # Load object
   o <- LoadH5Seurat(paste0("Cell-type analysis/", ct, "/data/", ct, ".h5Seurat"), misc=F, graphs=F, reductions=F, neighbors=F, verbose=F)
   
