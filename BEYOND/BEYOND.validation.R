@@ -9,10 +9,11 @@ source("BEYOND/utils.R")
 # Creating AnnData object with embedding for bulk data     #
 # -------------------------------------------------------- #
 snuc.data <- anndata::read_h5ad("BEYOND/data/BEYOND.DLPFC.h5ad")
+celmod <- readRDS("Other analyses/data/celmod.predictions.rds")
 
 # Create anndata object from celmod predictions non-overlapping donors
-data <- AnnData(X = (py_to_r(snuc.data$uns$celmod$avg.predicted.prop$validation)[, snuc.data$uns$celmod$celmod.states])**2,
-                obsm = list(meta.data = load.metadata()[rownames(py_to_r(snuc.data$uns$celmod$avg.predicted.prop$validation)),]))
+data <- AnnData(X = (py_to_r(celmod$avg.predicted.prop$validation)[, celmod$celmod.states])**2,
+                obsm = list(meta.data = load.metadata()[rownames(py_to_r(celmod$avg.predicted.prop$validation)),]))
 
 # 2D embedding and donors' similarities in embedding
 sc <- reticulate::import("scanpy")
@@ -27,7 +28,7 @@ for(e in c("X_umap"))
   data$obsp[[paste0("similarity_", e)]] <- embedding.similatity(data$obsm[[e]], knn = 5)
 
 anndata::write_h5ad(data, "BEYOND/data/BEYOND.Celmod.DLPFC.h5ad")
-rm(e, sc, snuc.data, data)
+rm(e, sc, snuc.data, data, celmod)
 
 # -------------------------------------------------------- #
 # Trajectory Analysis and dynamics                         #
