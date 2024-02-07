@@ -58,4 +58,3 @@ We validate BEYOND in an independent set of participants whose cellular environm
 the <a href="https://github.com/MenonLab/Celmod">CelMod</a> algorithm (<a href="https://www.nature.com/articles/s41593-023-01356-x">Cain A. _et al._, 2023</a>). File `BEYOND.validations.R` contains the relevant code.
 
 - The code for fitting the Celmod models over the used bulk RNA-seq and predicting the subpopulation proportions is found in `../Other analyses/CelMod.fitting.R`.
-- While this code is not directly part of the BEYOND methodology, for convenience of implementation results were stored within the same DLPFC landscape AnnData object.
