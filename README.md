@@ -11,6 +11,7 @@ The following repository contains:
 - **Library level snRNA-seq analysis**: Removal of background RNA, quality control steps, cell-type classification and doublets annotation.
 - **Cell-type level snRNA-seq analysis**: Creating our cell atlas. Removal of low quality cells and doublets, sub-clustering analysis, differential expression and pathway enrichment analyses.
 - **BEYOND analysis and validations**: Applying BEYOND methodology steps over our cell atlas.
+- **Other analyses**: Such as bulk RNA-seq deconvolution using CelMod, trait associations and meta-analysis, and RNAscope validations.
 - **Manuscript figure and supplementary tables code**: The complete code generating all figures, extended data figures and supplementary tables shown in the manuscript
 
 > [!NOTE]
