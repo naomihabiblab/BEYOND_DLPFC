@@ -1,4 +1,5 @@
-source("BEYOND/utils.R")
+source("Cell-type analysis/load.code.env.R")
+source("BEYOND/utils/utils.R")
 
 
 ####################################################################################################################
@@ -8,7 +9,7 @@ source("BEYOND/utils.R")
 # -------------------------------------------------------- #
 # Creating AnnData object with embedding for bulk data     #
 # -------------------------------------------------------- #
-snuc.data <- anndata::read_h5ad("BEYOND/data/BEYOND.DLPFC.h5ad")
+snuc.data <- anndata::read_h5ad("Cell-type analysis/data/subpopulation.proportions.h5ad")
 celmod <- readRDS("Other analyses/data/celmod.predictions.rds")
 
 # Create anndata object from celmod predictions non-overlapping donors
@@ -27,13 +28,13 @@ data$obsp <- list()
 for(e in c("X_umap"))
   data$obsp[[paste0("similarity_", e)]] <- embedding.similatity(data$obsm[[e]], knn = 5)
 
-anndata::write_h5ad(data, "BEYOND/data/BEYOND.Celmod.DLPFC.h5ad")
+anndata::write_h5ad(data, "BEYOND/data/Celmod.subpopulation.proportion.h5ad")
 rm(e, sc, snuc.data, data, celmod)
 
 # -------------------------------------------------------- #
 # Trajectory Analysis and dynamics                         #
 # -------------------------------------------------------- #
-data <- anndata::read_h5ad("BEYOND/data/BEYOND.Celmod.DLPFC.h5ad")
+data <- anndata::read_h5ad("BEYOND/data/Celmod.subpopulation.proportion.h5ad")
 
 # Fitting trajectories
 data$uns$trajectories <- fit.trajectories.palantir(data, dm = 5, dm.k=30, palantir.k = 15, scale=F, root.clusters = c("3","11"), use_early_cell_as_start = F)
@@ -50,5 +51,5 @@ data$uns$trajectories$dynamics <- fit.dynamics(pseudotime = data$uns$trajectorie
                                            bootstrap = F)
 
 data$uns$trajectories$params <- NULL
-anndata::write_h5ad(data, "BEYOND/data/BEYOND.Celmod.DLPFC.h5ad")
+anndata::write_h5ad(data, "BEYOND/data/Celmod.subpopulation.proportion.h5ad")
 rm(features)

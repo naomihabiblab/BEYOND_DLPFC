@@ -1,4 +1,4 @@
-source("BEYOND/utils.R")
+source("Cell-type analysis/load.code.env.R")
 
 
 ####################################################################################################################
@@ -8,9 +8,10 @@ source("BEYOND/utils.R")
 # -------------------------------------------------------- #
 # State-Trait associations                                 #
 # -------------------------------------------------------- #
-data <- anndata::read_h5ad("BEYOND/data/BEYOND.DLPFC.h5ad")
+data <- anndata::read_h5ad("Cell-type analysis/data/subpopulation.proportions.h5ad")
 bulk <- py_to_r(data$uns$celmod$avg.predicted.prop$train)
 
+source("Cell-type analysis/ROSMAP.metadata.R")
 bulk.metadata <- merge(load.metadata()[rownames(bulk),], 
                        read.csv("Other analyses/data/ROSMAP.bulk.RIN.values.csv", row.names = 1), 
                        by.x="row.names", by.y="row.names", all.x=TRUE)
@@ -28,14 +29,14 @@ data$uns$trait.analysis <- sapply(names(sets), function(n)
   associate.traits(sets[[n]]$traits, sets[[n]]$covariates, sets[[n]]$controls) %>% dplyr::rename("state"="covariate"),
   simplify = F, USE.NAMES = T)
 
-anndata::write_h5ad(data, "BEYOND/data/BEYOND.DLPFC.h5ad")
+anndata::write_h5ad(data, "Cell-type analysis/data/subpopulation.proportions.h5ad")
 rm(data, bulk, bulk.metadata, traits, sets)
 
 
 # -------------------------------------------------------- #
 # State-Trait associations - meta-analysis                 #
 # -------------------------------------------------------- #
-data <- anndata::read_h5ad("BEYOND/data/BEYOND.DLPFC.h5ad")
+data <- anndata::read_h5ad("Cell-type analysis/data/subpopulation.proportions.h5ad")
 data$uns$trait.analysis$meta.analysis <-
   merge(py_to_r(data$uns$trait.analysis$snuc),
         py_to_r(data$uns$trait.analysis$celmod),
@@ -49,4 +50,4 @@ data$uns$trait.analysis$meta.analysis <-
          pval.meta = 2*pnorm(-abs(z.meta)),
          adj.pval.meta = p.adjust(pval.meta, method="BH"),
          sig.meta = cut(adj.pval.meta, c(-.1, .0001, .001, .01, .05, Inf), c("****","***", "**", "*", "")))
-anndata::write_h5ad(data, "BEYOND/data/BEYOND.DLPFC.h5ad")
+anndata::write_h5ad(data, "Cell-type analysis/data/subpopulation.proportions.h5ad")

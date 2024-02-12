@@ -1,4 +1,5 @@
-source("BEYOND/utils.R")
+source("Cell-type analysis/load.code.env.R")
+source("BEYOND/utils/utils.R")
 
 
 ####################################################################################################################
@@ -8,7 +9,7 @@ source("BEYOND/utils.R")
 # -------------------------------------------------------- #
 # Trajectory Analysis using Palantir & VIA                 #
 # -------------------------------------------------------- #
-data <- anndata::read_h5ad("BEYOND/data/BEYOND.DLPFC.h5ad")
+data <- anndata::read_h5ad("Cell-type analysis/data/subpopulation.proportions.h5ad")
 data$uns$trajectories <- list()
 
 # Run Palantir algorithm
@@ -20,20 +21,20 @@ data$uns$trajectories$palantir$branch.probs$columns <- c("prAD", "ABA")
 data$uns$trajectories$palantir$terminals$index <- c("prAD", "ABA")
 
 # Run VIA algorithm
-data$uns$trajectories$via <- fit.trajectories.via(data.path = "BEYOND/data/BEYOND.DLPFC.h5ad", knn=20, 
+data$uns$trajectories$via <- fit.trajectories.via(data.path = "Cell-type analysis/data/subpopulation.proportions.h5ad", knn=20, 
                                                   too.big = c(.2, .075), too.small=5,
                                                   root.clusters = c("3","4"))
 data$uns$trajectories$via$branch.probs$columns <- 
   data$uns$trajectories$via$branch.probs.scaled$columns <-
   data$uns$trajectories$via$terminals$index <- 
   c("ABA", "Trajectory.4", "prAD", "Trajectory.3")
-anndata::write_h5ad(data, "BEYOND/data/BEYOND.DLPFC.h5ad")
+anndata::write_h5ad(data, "Cell-type analysis/data/subpopulation.proportions.h5ad")
 
 
 # -------------------------------------------------------- #
 # Fit trait/state dynamics to found trajectories           #
 # -------------------------------------------------------- #
-data <- anndata::read_h5ad("BEYOND/data/BEYOND.DLPFC.h5ad")
+data <- anndata::read_h5ad("Cell-type analysis/data/subpopulation.proportions.h5ad")
 features <- data.frame(data$layers[["sqrt.prev"]],
                        data$obsm$meta.data[,c("cogng_demog_slope","sqrt.tangles_mf","sqrt.amyloid_mf")], row.names = data$obs_names)
 
@@ -46,5 +47,5 @@ for(model in c("palantir", "via")) {
                  evaluate.fit = T,
                  bootstrap = F) 
 }
-anndata::write_h5ad(data, "BEYOND/data/BEYOND.DLPFC.h5ad")
+anndata::write_h5ad(data, "Cell-type analysis/data/subpopulation.proportions.h5ad")
 rm(features, model)

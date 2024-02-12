@@ -1,5 +1,7 @@
-source("BEYOND/utils.R")
+source("Cell-type analysis/load.code.env.R")
 source("Other analyses/trait.association.util.R")
+source("BEYOND/utils/utils.R")
+
 
 ####################################################################################################################
 ##                                           #  Communities Analysis #                                            ##
@@ -8,7 +10,7 @@ source("Other analyses/trait.association.util.R")
 # -------------------------------------------------------- #
 # State-State Correlations                                 #
 # -------------------------------------------------------- #
-data <- anndata::read_h5ad("BEYOND/data/BEYOND.DLPFC.h5ad")
+data <- anndata::read_h5ad("Cell-type analysis/data/subpopulation.proportions.h5ad")
 data$uns$ss.cor <- list(
   names = colnames(data$X),
   corr = stats::cor(data$X, use = "pairwise.complete.obs", method = "spearman"),
@@ -21,14 +23,14 @@ data$uns$ss.cor$sig <- matrix(cut(data$uns$ss.cor$adj.pval, c(-.1, .0001, .001, 
 data$uns$ss.cor$params <- list(cor.method = "spearman",
                                cor.use = "pairwise.complete.obs",
                                p.adjust.method = "BH")
-anndata::write_h5ad(data, "BEYOND/data/BEYOND.DLPFC.h5ad")
+anndata::write_h5ad(data, "Cell-type analysis/data/subpopulation.proportions.h5ad")
 rm(data)
 
 
 # -------------------------------------------------------------- #
 # Construct communities based on state correlations and dynamics #
 # -------------------------------------------------------------- #
-data <- anndata::read_h5ad("BEYOND/data/BEYOND.DLPFC.h5ad")
+data <- anndata::read_h5ad("Cell-type analysis/data/subpopulation.proportions.h5ad")
 
 # ----------------------------------- #
 #    High Resolution Communities      # 
@@ -86,7 +88,7 @@ data$uns$communities <- list(
   dynamics.colnames = colnames(communities$dynamics.mtx)
 )
 data$var <- cbind(data$var, membership)
-anndata::write_h5ad(data, "BEYOND/data/BEYOND.DLPFC.h5ad")
+anndata::write_h5ad(data, "Cell-type analysis/data/subpopulation.proportions.h5ad")
 rm(data)
 
 
@@ -94,7 +96,7 @@ rm(data)
 # -------------------------------------------------------------- #
 # Community dynamics and trait-associations                      #
 # -------------------------------------------------------------- #
-data <- anndata::read_h5ad("BEYOND/data/BEYOND.DLPFC.h5ad")
+data <- anndata::read_h5ad("Cell-type analysis/data/subpopulation.proportions.h5ad")
 data$obsm$communities <- donor.community.proportion(data$X, data$var %>% dplyr::select(community))
 data$obsm$sub.communities <- donor.community.proportion(data$X, data$var %>% dplyr::select(sub.community))
 
@@ -110,7 +112,7 @@ data$uns$communities$trait.association <- associate.traits(
   covariates = cbind(data$obsm$communities, data$obsm$sub.communities %>% dplyr::select(-`NA.`)),
   controls = data.frame(data$obsm$meta.data[,c("age_death","msex","pmi")], data$obsm$QCs[,c("Estimated_Number_of_Cells")]))
 
-anndata::write_h5ad(data, "BEYOND/data/BEYOND.DLPFC.h5ad")
+anndata::write_h5ad(data, "Cell-type analysis/data/subpopulation.proportions.h5ad")
 rm(data)
 
 
@@ -120,10 +122,10 @@ rm(data)
 # -------------------------------------------------------------- #
 source("Cell-type analysis/utils/pathways.analysis.R")
 
-data.extended <- "Cell-type analysis/DLPFC.Green.atlas.h5"
-mapping <- setNames(h5read(data.extended, "index")$values, h5read(data.extended, "index")$ind)
+aggregated.data <- "Cell-type analysis/DLPFC.Green.atlas.h5"
+mapping <- setNames(h5read(aggregated.data, "index")$values, h5read(aggregated.data, "index")$ind)
 
-data <- anndata::read_h5ad("BEYOND/data/BEYOND.DLPFC.h5ad")
+data <- anndata::read_h5ad("Cell-type analysis/data/subpopulation.proportions.h5ad")
 states.all <- data$var %>% 
   mutate(grouping.by = recode(grouping.by, "Excitatory Neurons" = "excitatory","Inhibitory Neurons" = "inhibitory",
                               "Oligodendrocytes" = "oligodendrocytes", "Astrocyte" = "astrocytes","Microglia" = "microglia", "OPCs" = "opcs",
@@ -151,7 +153,7 @@ pathways <- lapply(names(clustering.params), function(comm) {
     unstack(rowname~grouping.by)
   
   pathways <- do.call(rbind, lapply(names(states), function(ct) 
-    h5read(data.extended, file.path(mapping[[ct]], "pa")) %>% filter(state %in% states[[ct]])))
+    h5read(aggregated.data, file.path(mapping[[ct]], "pa")) %>% filter(state %in% states[[ct]])))
   
   grouped.pathways <- pathways %>% 
     group_by(ID, Description, direction) %>%

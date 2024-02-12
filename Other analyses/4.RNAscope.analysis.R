@@ -1,4 +1,4 @@
-source("BEYOND/utils.R")
+source("Cell-type analysis/load.code.env.R")
 
 
 ####################################################################################################################
@@ -129,7 +129,7 @@ validations$RNAscope$morpholoy.association <-
 # ------------------------------------------------------------- #
 # Subpopulation-proportion morphology analysis - ROSMAP cohort  #
 # ------------------------------------------------------------- #
-data <- anndata::read_h5ad("BEYOND/data/BEYOND.DLPFC.h5ad")
+data <- anndata::read_h5ad("Cell-type analysis/data/subpopulation.proportions.h5ad")
 
 others = paste0("Mic.", c(1:11,14:16) )
 df <- data.frame(data$X[,data$var$grouping.by == "Microglia"],
