@@ -8,11 +8,11 @@ To reconstruct the dynamics of the brain's cellular environment along the progre
 <p align="justify">
 The following repository contains:
   
-- **Library level snRNA-seq analysis**: Removal of background RNA, quality control steps, cell-type classification and doublets annotation.
-- **Cell-type level snRNA-seq analysis**: Creating our cell atlas. Removal of low quality cells and doublets, sub-clustering analysis, differential expression and pathway enrichment analyses.
-- **BEYOND analysis and validations**: Applying BEYOND methodology steps over our cell atlas.
-- **Other analyses**: Such as bulk RNA-seq deconvolution using CelMod, trait associations and meta-analysis, and RNAscope validations.
-- **Manuscript figure and supplementary tables code**: The complete code generating all figures, extended data figures and supplementary tables shown in the manuscript
+1. **Library preprocessing**: Library level snRNA-seq analysis. Removal of background RNA, quality control steps, cell-type classification and doublets annotation.
+2. **Cell-type analysis**: snRNA-seq analysis for each of the cell types. Creating our cell atlas. Removal of low quality cells and doublets, sub-clustering analysis, differential expression and pathway enrichment analyses.
+3. **Other analyses**: Celmod bulk RNA-seq deconvolution, trait associations and meta-analysis, causal modeling, RNAscope validations and pTau validations.
+4. **BEYOND**: Applying BEYOND methodology steps over our cell atlas, as well as validation over replication cohort.
+5. **Manuscript code**: The complete code generating all figures, extended data figures and supplementary tables shown in the manuscript.
 
 > [!NOTE]
 > The code within each folder runs under the assumption that the code of the previous folder was executed and generated the necessary data files. Please refer to the readme file of each folder for more details
