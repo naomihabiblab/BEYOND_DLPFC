@@ -12,12 +12,12 @@ This framework consists of 4 steps:
 
 ### (1) Modeling the cellular landscape manifold
 
-<p align="justify">BEYOND represents each participant by its cellular composition profile in our cell atlas to model their cellular environment. It then builds a cellular landscape manifold that captures the diversity of 
+<p align="justify">
+BEYOND represents each participant by its cellular composition profile (see Cell-type analysis/create.proportion.matrix.R) in our cell atlas to model their cellular environment. It then builds a cellular landscape manifold that captures the diversity of 
 cellular environments, with each participant as a single point in the high dimensional manifold (and can be visualized in low dimension). 
 
-File `1.create.cellular.landscape.R` contains the code to calculate participants' cellular environments and to model the DLPFC cellular landscape manifold. For visualization and exploration purposes we embedded 
-participants' in a low-dimensional space using PHATE (2D and 3D), UMAP and tSNE (2D). For convenience we have arranged the participants' cellular environments, the landscape, embeddings and further information 
-in an <a href="https://github.com/scverse/anndata">AnnData object</a> format.
+File `1.create.cellular.landscape.R` contains the code to model the DLPFC cellular landscape manifold. For visualization and exploration purposes we embedded 
+participants' in a low-dimensional space using PHATE (2D and 3D), UMAP and tSNE (2D). For convenience we have arranged the participants' cellular environments, the landscape, embeddings and further information in an <a href="https://anndata.readthedocs.io/en/latest/">AnnData object</a> format.
 </p>
 
 > [!NOTE] 
@@ -55,6 +55,6 @@ File `3.construct.cellular.communities.R` contains the code for constructing the
 ### Validating BEYOND
 
 We validate BEYOND in an independent set of participants whose cellular environments are obtained by bulk-to-single-cell deconvolution using 
-the <a href="https://github.com/MenonLab/Celmod">CelMod</a> algorithm (<a href="https://www.nature.com/articles/s41593-023-01356-x">Cain A. _et al._, 2023</a>). File `BEYOND.validations.R` contains the relevant code.
+the <a href="https://github.com/MenonLab/Celmod">CelMod</a> algorithm (<a href="https://www.nature.com/articles/s41593-023-01356-x">Cain A. _et al._, 2023</a>). File `4.BEYOND.validations.R` contains the relevant code.
 
 - The code for fitting the Celmod models over the used bulk RNA-seq and predicting the subpopulation proportions is found in `../Other analyses/CelMod.fitting.R`.
