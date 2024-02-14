@@ -9,7 +9,7 @@ source("Cell-type analysis/load.code.env.R")
 # State-Trait associations                                 #
 # -------------------------------------------------------- #
 data <- anndata::read_h5ad("Cell-type analysis/data/subpopulation.proportions.h5ad")
-bulk <- py_to_r(data$uns$celmod$avg.predicted.prop$train)
+bulk <- py_to_r(data$uns$celmod$avg.predicted.prop$validation)
 
 source("Cell-type analysis/ROSMAP.metadata.R")
 bulk.metadata <- merge(load.metadata()[rownames(bulk),], 
