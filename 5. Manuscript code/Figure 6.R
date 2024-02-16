@@ -314,7 +314,7 @@ while (!is.null(dev.list()))  dev.off()
 #                                               Panel G - Mic.13-Ast.10 colocalization                              #
 # ----------------------------------------------------------------------------------------------------------------- #
 cols <- list(`Early/ABA`=green2purple(5)[2], prAD=green2purple(5)[4])
-df <- readRDS("Manuscript code/data/ST.validation.state.signatures.corrected.rds") %>% 
+df <- readRDS("Other analyses/data/ST.validation.state.signatures.rds") %>% 
   mutate(trajectory = case_when(trajectory %in% c("Early","ABA") ~ "Early/ABA", .default = trajectory))
 
 vals <- df[,c("sample","trajectory")] %>% unique %>% `rownames<-`(NULL)
@@ -342,7 +342,7 @@ while (!is.null(dev.list()))  dev.off()
 #                                                 Panel H - Ast.10-Ast.5 exclusivity                                #
 # ----------------------------------------------------------------------------------------------------------------- #
 cols <- list(ABA=green2purple(5)[2], prAD=green2purple(5)[4], Early = "grey70")
-df <- readRDS("Manuscript code/data/ST.validation.state.signatures.corrected.rds")
+df <- readRDS("Other analyses/data/ST.validation.state.signatures.rds")
 
 vals <- df[,c("sample","trajectory")] %>% unique %>% `rownames<-`(NULL)
 vals <- rbind(
@@ -593,7 +593,7 @@ print(lapply(sort(unique(df$sample)), function(sample) {
 #                                       Panel G - Ast.10-Ast.5 spatial incompatibility                              #
 # ----------------------------------------------------------------------------------------------------------------- #
 cols <- list(Ast.5=green2purple(5)[2], Ast.10=green2purple(5)[4])
-df <- readRDS("Manuscript code/data/ST.validation.state.signatures.corrected.rds") %>%
+df <- readRDS("Other analyses/data/ST.validation.state.signatures.rds") %>%
   arrange(trajectory, sample) %>% mutate(sample=paste(trajectory, sample))
 
 pdf(file.path(path, "s9G.pdf"), width=embed.height.small*.8*length(unique(df$sample)), height=embed.height.small)
