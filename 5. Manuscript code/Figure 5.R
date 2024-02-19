@@ -1,4 +1,4 @@
-source("Manuscript code/utils.R")
+source("5. Manuscript code/utils.R")
 
 
 #####################################################################################################################
@@ -61,7 +61,7 @@ while (!is.null(dev.list()))  dev.off()
 # ----------------------------------------------------------------------------------------------------------------- #
 #                                              Panel F - Landscape Bulk                                             #
 # ----------------------------------------------------------------------------------------------------------------- #
-bulk <- anndata::read_h5ad("BEYOND/data/Celmod.subpopulation.proportion.h5ad")
+bulk <- anndata::read_h5ad("4. BEYOND/data/Celmod.subpopulation.proportion.h5ad")
 
 # prAD-ABA landscape
 pdf(file.path(path, "5F.traj.prob.pdf"), width=embed.width.small, height=embed.height.small)
@@ -260,7 +260,7 @@ while (!is.null(dev.list()))  dev.off()
 #                                       Panel I - Replication Palantir model                                        #
 # ----------------------------------------------------------------------------------------------------------------- #
 
-bulk <- anndata::read_h5ad("BEYOND/data/Celmod.subpopulation.proportion.h5ad")
+bulk <- anndata::read_h5ad("4. BEYOND/data/Celmod.subpopulation.proportion.h5ad")
 df <- data.frame(pseudotime=bulk$uns$trajectories$pseudotime,
                  entropy=apply(py_to_r(bulk$uns$trajectories$branch.probs), 1, function(i) -sum(i*log2(i)) %>% ifelse(is.nan(.), 0, .)),
                  py_to_r(bulk$uns$trajectories$branch.probs))

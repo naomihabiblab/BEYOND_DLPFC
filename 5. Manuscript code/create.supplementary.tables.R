@@ -1,5 +1,5 @@
 library(openxlsx)
-source("Manuscript code/utils.R")
+source("5. Manuscript code/utils.R")
 
 creator <- "Gilad Sahar Green, Habib Lab, HUJI"
 state.order <- lapply(atlas, "[[", "state.order") %>% unlist %>% unname %>% recode(., "NFOL.MOL"="NFOL/MOL")
@@ -14,7 +14,7 @@ add.header.style <- function(wb, sheet, ncols) {
 
 
 # Swap donor identities with a sequential index 1:n
-data <- anndata::read_h5ad("Cell-type analysis/data/subpopulation.proportions.h5ad")
+data <- anndata::read_h5ad("2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 core.donors <- data$obs_names
 ST.donors <- readRDS("Manuscript code/data/ST.validation.state.signatures.corrected.rds") %>% 
   select(donor.id = sample, trajectory=trajectory_group) %>% unique %>% 
@@ -22,7 +22,7 @@ ST.donors <- readRDS("Manuscript code/data/ST.validation.state.signatures.correc
   filter(trajectory != "Early") %>% 
   `rownames<-`(.$donor.id) %>% select(trajectory)
 
-snuc.donors <- openxlsx::read.xlsx("Manuscript code/data/ROSMAP 10X Processing  Tracker.xlsx", sheet = "Processed Batches") %>%
+snuc.donors <- openxlsx::read.xlsx("5. Manuscript code/data/ROSMAP 10X Processing  Tracker.xlsx", sheet = "Processed Batches") %>%
   filter(!Batch %in% c("B1", "B2", "B3") & StudyCode != "MAP83034844") %>%
   pull(StudyCode) %>% unique %>% gsub("ROS|MAP", "", .) %>% as.numeric %>% as.character
 
@@ -33,7 +33,7 @@ donor.mapping <- setNames(seq_along(donor.mapping), donor.mapping)
 data$obs_names <- as.character(donor.mapping[data$obs_names])
 
 stack(donor.mapping) %>% `colnames<-`(c("supp.table.id","ROSMAP.proj.id")) %>% 
-  saveRDS("Manuscript code/data/Supp.to.ROSMAP.id.mapping.rds")
+  saveRDS("5. Manuscript code/data/Supp.to.ROSMAP.id.mapping.rds")
 
 ####################################################################################################################
 ##                            #  Supplementary Table 1 - Clinicopathological Characteristics  #                   ##
@@ -64,7 +64,7 @@ addStyle(wb, sheet = sheet, header.style(), rows = 1, cols = 0:ncol(df)+1, gridE
 # Create sheet for characteristics of bulk cohort          #
 # -------------------------------------------------------- #
 df <- merge(load.metadata()[bulk.donors,], 
-            read.csv("Other analyses/data/ROSMAP.bulk.RIN.values.csv", row.names = 1), 
+            read.csv("3. Other analyses/data/ROSMAP.bulk.RIN.values.csv", row.names = 1), 
             by.x="row.names", by.y="row.names", all.x=TRUE) %>%
   mutate(donor.id = donor.mapping[as.character(Row.names)]) %>%
   dplyr::select(donor.id, study, msex, age_death, pmi, RIN, cogng_demog_slope, cogdx,
@@ -75,7 +75,7 @@ writeData(wb, sheet = sheet, df, rowNames = FALSE)
 addStyle(wb, sheet = sheet, header.style(), rows = 1, cols = 0:ncol(df)+1, gridExpand = TRUE)
 
 
-saveWorkbook(wb, "Manuscript code/data/Supplementary Table 1 - Participants Clinicopathological Characteristics.xlsx", overwrite = TRUE)
+saveWorkbook(wb, "5. Manuscript code/data/Supplementary Table 1 - Participants Clinicopathological Characteristics.xlsx", overwrite = TRUE)
 rm(df, sheet, wb)
 
 
@@ -186,7 +186,7 @@ wb <- format.sheet(wb, "pathways.pairwise", df,
                    horizontal.border.after = c("pathway"))
   
 
-saveWorkbook(wb, "Manuscript code/data/Supplementary Table 2 - Atlas Characterization.xlsx", overwrite = TRUE)
+saveWorkbook(wb, "5. Manuscript code/data/Supplementary Table 2 - Atlas Characterization.xlsx", overwrite = TRUE)
 rm(df, wb, format.sheet)
 
 
@@ -258,7 +258,7 @@ addWorksheet(wb, (sheet <- "Endophenoptye meta-analysis"), gridLines = TRUE)
 writeData(wb, sheet, df, rowNames = FALSE)
 addStyle(wb, sheet = sheet, header.style(), rows = 1, cols = 0:ncol(df)+1, gridExpand = TRUE)
 
-saveWorkbook(wb, "all/data/Supplementary Table 3 - Endophenotypes Associations.xlsx", overwrite = TRUE)
+saveWorkbook(wb, "5. Manuscript code/data/Supplementary Table 3 - Endophenotypes Associations.xlsx", overwrite = TRUE)
 rm(df, wb, sheet)
 
 
@@ -266,7 +266,7 @@ rm(df, wb, sheet)
 ####################################################################################################################
 ##                                   #  Supplementary Table 4 - smFISH analysis  #                                ##
 ####################################################################################################################
-validations <- readRDS("Other analyses/data/RNAscope.rds")
+validations <- readRDS("3. Other analyses/data/RNAscope.rds")
 
 wb <- createWorkbook(creator = creator, title = "smFISH quantifications")
 addWorksheet(wb, "Description", gridLines = TRUE)
@@ -333,7 +333,7 @@ writeData(wb, sheet = sheet, df, startRow = 1, rowNames = FALSE)
 addStyle(wb, sheet = sheet, header.style(), rows = 1, cols = 0:ncol(df)+1, gridExpand = TRUE)
 
 
-saveWorkbook(wb, "Manuscript code/data/Supplementary Table 4 - smFISH quantifications.xlsx", overwrite = TRUE)
+saveWorkbook(wb, "5. Manuscript code/data/Supplementary Table 4 - smFISH quantifications.xlsx", overwrite = TRUE)
 rm(df, validations, wb, sheet)
 
 
@@ -441,4 +441,4 @@ writeData(wb, sheet = sheet, df, rowNames = FALSE)
 addStyle(wb, sheet = sheet, header.style(), rows = 1, cols = 0:ncol(df)+1, gridExpand = TRUE)
 
 
-saveWorkbook(wb, "Manuscript code/data/Supplementary Table 5 - BEYOND analysis results.xlsx", overwrite = TRUE)
+saveWorkbook(wb, "5. Manuscript code/data/Supplementary Table 5 - BEYOND analysis results.xlsx", overwrite = TRUE)

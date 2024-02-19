@@ -1,11 +1,11 @@
-source("Manuscript code/utils.R")
+source("5. Manuscript code/utils.R")
 
 
 #####################################################################################################################
 #                                          Figure 1 - Cohort & Atlas Overview                                       #
 #####################################################################################################################
 
-donors <- openxlsx::read.xlsx("Manuscript code/data/ROSMAP 10X Processing  Tracker.xlsx", sheet = "Processed Batches") %>%
+donors <- openxlsx::read.xlsx("5. Manuscript code/data/ROSMAP 10X Processing  Tracker.xlsx", sheet = "Processed Batches") %>%
   filter(!Batch %in% c("B1", "B2", "B3") & StudyCode != "MAP83034844") %>%
   pull(StudyCode) %>% unique %>% gsub("ROS|MAP", "", .) %>% as.numeric %>% as.character()
 cohort <- load.metadata() %>% `[`(donors,)
@@ -178,7 +178,7 @@ cols <- list(
 #                                         Panel A - batch trait distributions                                       #
 # ----------------------------------------------------------------------------------------------------------------- #
 df <- annotations %>% dplyr::select(projid, batch) %>% unique %>%
-  merge(., read.csv("Library preprocessing/data/snrnaseq_sample_selection_20210817.csv", header = T) %>%
+  merge(., read.csv("1. Library preprocessing/data/snrnaseq_sample_selection_20210817.csv", header = T) %>%
           mutate(projid = as.character(projid),
                  sex = factor(plyr::mapvalues(msex, c(F,T), c("Female", "Male"))),
                  cogdx = factor(recode(cogdx, "1"="NCI", "2"="MCI", "3"="MCI", "4"="AD", "5"="AD", "6"="Other\nDementia", .default = as.character(cogdx))),
@@ -217,7 +217,7 @@ rm(df)
 
 pdf(file.path(path, "s1C.pdf"), width=embed.width*2, height=embed.height*2)
 lapply(c("191213-B7-B", "200720-B36-A"), function(n) {
-  o <- readRDS(paste0("Library preprocessing/data/libraries.for.low.qual.thresholds/", n, ".seurat.rds") )
+  o <- readRDS(paste0("1. Library preprocessing/data/low.qual.thr.libs/", n, ".seurat.rds") )
   plot_grid(
     DimPlot(o, group.by = "cell.type", pt.size = 1.75, ncol = 1, cols=cols, raster = T, raster.dpi = c(1024,1024)) + 
       theme_embedding + labs(x=NULL, y=NULL, title=NULL) + theme(legend.position = "none"),
@@ -231,7 +231,7 @@ while (!is.null(dev.list()))  dev.off()
 # ----------------------------------------------------------------------------------------------------------------- #
 #                                    Panel D - manual curation of low quality thresholds                            #
 # ----------------------------------------------------------------------------------------------------------------- #
-o <- readRDS("Library preprocessing/data/libraries.for.low.qual.thresholds/191213-B7-B.seurat.rds")
+o <- readRDS("1. Library preprocessing/data/low.qual.thr.libs/191213-B7-B.seurat.rds")
 cols2 <- colorRampPalett
 cols2 <- cols(length(unique(o$SCT_snn_res.0.2)))
 
@@ -269,7 +269,7 @@ rm(o, cols2)
 # ----------------------------------------------------------------------------------------------------------------- #
 #                                       Panel G - Example library Demux doublets UMAP                               #
 # ----------------------------------------------------------------------------------------------------------------- #
-o <- readRDS("Manuscript code/data/library.for.fig.191213-B7-B.seurat.rds")
+o <- readRDS("5. Manuscript code/data/library.for.fig.191213-B7-B.seurat.rds")
 
 pdf(file.path(path, "s1G.pdf"), width=embed.width, height=embed.height)
 FetchData(o, c("UMAP_1","UMAP_2","is.doublet.demux")) %>% 
@@ -291,7 +291,7 @@ rm(o)
 # ----------------------------------------------------------------------------------------------------------------- #
 #                                       Panel H - Example library DoubletFinder scores                              #
 # ----------------------------------------------------------------------------------------------------------------- #
-o <- readRDS("Manuscript code/data/library.for.fig.191213-B7-B.seurat.rds")
+o <- readRDS("5. Manuscript code/data/library.for.fig.191213-B7-B.seurat.rds")
 
 pdf(file.path(path, "s1H.pdf"), width=embed.width, height=embed.height)
 FetchData(o, c("UMAP_1","UMAP_2","doublet.score")) %>% 
@@ -313,7 +313,7 @@ rm(o)
 # ----------------------------------------------------------------------------------------------------------------- #
 #                                        Panel I - MCC distributions across libraries                               #
 # ----------------------------------------------------------------------------------------------------------------- #
-libs <- list.files("Library preprocessing/data/libraries/", "*.seurat.rds", full.names = TRUE, recursive = TRUE)
+libs <- list.files("1. Library preprocessing/data/snRNA-seq libraries/", "*.seurat.rds", full.names = TRUE, recursive = TRUE)
 pb <- progress_bar$new(format="Loading libraries :current/:total [:bar] :percent in :elapsed. ETA :eta",
                        total = length(libs), clear=FALSE, width=100, force = TRUE)
 
@@ -363,7 +363,7 @@ rm(libs, pb, mcc)
 # expression were only removed once cell-type specific objects were created. The following is to illustrate
 # this process in the scope of the specific exaple library
 
-o <- readRDS("Manuscript code/data/library.for.fig.191213-B7-B.seurat.rds")
+o <- readRDS("5. Manuscript code/data/library.for.fig.191213-B7-B.seurat.rds")
 o[["percent.mt"]] <- PercentageFeatureSet(o, pattern = "^MT-")
 !(o$is.doublet | o$percent.mt >= 10)
 o <- subset(o, cells = colnames(o)[!(o$is.doublet | o$percent.mt >= 10)])

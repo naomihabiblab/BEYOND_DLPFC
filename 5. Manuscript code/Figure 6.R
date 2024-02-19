@@ -1,4 +1,4 @@
-source("Manuscript code/utils.R")
+source("5. Manuscript code/utils.R")
 
 
 #####################################################################################################################
@@ -230,9 +230,9 @@ while (!is.null(dev.list()))  dev.off()
 # ----------------------------------------------------------------------------------------------------------------- #
 #                                               Panel E - Community pathways                                        #
 # ----------------------------------------------------------------------------------------------------------------- #
-clustered.pathways  <- openxlsx::read.xlsx("Manuscript code/data/community.pathways.xlsx", sheet = 1)
-clustering.args     <- openxlsx::read.xlsx("Manuscript code/data/community.pathways.xlsx", sheet = 2, rowNames = T)
-pathway.annotations <- openxlsx::read.xlsx("Manuscript code/data/figures.data.xlsx", sheet = "community.pathways")
+clustered.pathways  <- openxlsx::read.xlsx("5. Manuscript code/data/community.pathways.xlsx", sheet = 1)
+clustering.args     <- openxlsx::read.xlsx("5. Manuscript code/data/community.pathways.xlsx", sheet = 2, rowNames = T)
+pathway.annotations <- openxlsx::read.xlsx("5. Manuscript code/data/figures.data.xlsx", sheet = "community.pathways")
 
 settings <- expand.grid(rownames(clustering.args), c("upregulated")) %>% 
   `colnames<-`(c("comm","dirc")) %>%
@@ -314,7 +314,7 @@ while (!is.null(dev.list()))  dev.off()
 #                                               Panel G - Mic.13-Ast.10 colocalization                              #
 # ----------------------------------------------------------------------------------------------------------------- #
 cols <- list(`Early/ABA`=green2purple(5)[2], prAD=green2purple(5)[4])
-df <- readRDS("Other analyses/data/ST.validation.state.signatures.rds") %>% 
+df <- readRDS("3. Other analyses/data/ST.validation.state.signatures.rds") %>% 
   mutate(trajectory = case_when(trajectory %in% c("Early","ABA") ~ "Early/ABA", .default = trajectory))
 
 vals <- df[,c("sample","trajectory")] %>% unique %>% `rownames<-`(NULL)
@@ -342,7 +342,7 @@ while (!is.null(dev.list()))  dev.off()
 #                                                 Panel H - Ast.10-Ast.5 exclusivity                                #
 # ----------------------------------------------------------------------------------------------------------------- #
 cols <- list(ABA=green2purple(5)[2], prAD=green2purple(5)[4], Early = "grey70")
-df <- readRDS("Other analyses/data/ST.validation.state.signatures.rds")
+df <- readRDS("3. Other analyses/data/ST.validation.state.signatures.rds")
 
 vals <- df[,c("sample","trajectory")] %>% unique %>% `rownames<-`(NULL)
 vals <- rbind(
@@ -545,7 +545,7 @@ cols <- list(ABA=green2purple(2)[1], prAD=green2purple(2)[2], Early = "grey30")
 df <- data$obsm$X_core_phate %>% `colnames<-`(c("PHATE_1","PHATE_2")) %>% filter(!is.na(PHATE_1)) %>% 
   merge(data$X[,c("Mic.13","Ast.10","Ast.5")], by.x="row.names", by.y="row.names") %>%
   merge(data.frame(data$uns$trajectories$palantir$branch.probs %>% py_to_r, pseudotime = data$uns$trajectories$palantir$pseudotime), by.x="Row.names", by.y="row.names") %>% 
-  merge(readRDS("Manuscript code/data/ST.validation.state.signatures.corrected.rds") %>% select(trajectory, sample) %>% unique, by.x="Row.names", by.y="sample", all.x=TRUE) %>% 
+  merge(readRDS("3. Other analyses/data/ST.validation.state.signatures.rds") %>% select(trajectory, sample) %>% unique, by.x="Row.names", by.y="sample", all.x=TRUE) %>% 
   arrange(!is.na(trajectory))
 
 pdf(file.path(path, "s9E.pdf"), width=embed.width, height=embed.height)
@@ -566,7 +566,7 @@ while (!is.null(dev.list()))  dev.off()
 #                                       Panel F - Mic.13-Ast.10 spatial correlation                                 #
 # ----------------------------------------------------------------------------------------------------------------- #
 cols <- list(ABA=green2purple(5)[2], prAD=green2purple(5)[4], Early = "grey70")
-df <- readRDS("Manuscript code/data/ST.validation.state.signatures.corrected.rds") %>%
+df <- readRDS("3. Other analyses/data/ST.validation.state.signatures.rds") %>%
   arrange(trajectory, sample) %>% mutate(sample=paste(trajectory, sample))
 
 
@@ -593,7 +593,7 @@ print(lapply(sort(unique(df$sample)), function(sample) {
 #                                       Panel G - Ast.10-Ast.5 spatial incompatibility                              #
 # ----------------------------------------------------------------------------------------------------------------- #
 cols <- list(Ast.5=green2purple(5)[2], Ast.10=green2purple(5)[4])
-df <- readRDS("Other analyses/data/ST.validation.state.signatures.rds") %>%
+df <- readRDS("3. Other analyses/data/ST.validation.state.signatures.rds") %>%
   arrange(trajectory, sample) %>% mutate(sample=paste(trajectory, sample))
 
 pdf(file.path(path, "s9G.pdf"), width=embed.height.small*.8*length(unique(df$sample)), height=embed.height.small)

@@ -1,4 +1,4 @@
-source("Manuscript code/utils.R")
+source("5. Manuscript code/utils.R")
 
 
 #####################################################################################################################
@@ -293,7 +293,7 @@ rm(ct,  sigs, de, exp, df, mtx, significance, labeling)
 #                                        Dotplot of selected genes from pathways                                    #
 # ----------------------------------------------------------------------------------------------------------------- #
 
-atlas.genes <- openxlsx::read.xlsx("Manuscript code/data/figures.data.xlsx", sheet = 2)
+atlas.genes <- openxlsx::read.xlsx("5. Manuscript code/data/figures.data.xlsx", sheet = 2)
 atlas.genes <- split(atlas.genes, atlas.genes$cell.type) %>% lapply(., function(ct) 
   ct %>% mutate(grouping = factor(grouping, levels=unique(grouping))) %>% 
     tidyr::separate_rows("genes", sep="/") %>%

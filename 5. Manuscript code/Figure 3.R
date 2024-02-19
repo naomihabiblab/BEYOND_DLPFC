@@ -1,4 +1,4 @@
-source("Manuscript code/utils.R")
+source("5. Manuscript code/utils.R")
 
 
 #####################################################################################################################
@@ -189,5 +189,5 @@ while (!is.null(dev.list()))  dev.off()
 # ----------------------------------------------------------------------------------------------------------------- #
 #                                             Panels D-I - Causal modeling                                          #
 # ----------------------------------------------------------------------------------------------------------------- #
-# Panels were designed based on the results in the Other analyses/3.causal modeling.R file
+# Panels were designed based on the results in the `3. Other analyses/3.causal modeling.R` file
 
