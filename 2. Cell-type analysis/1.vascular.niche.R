@@ -1,4 +1,4 @@
-setwd("Cell-type analysis")
+setwd("2. Cell-type analysis")
 
 library(Seurat)
 library(SeuratDisk)
@@ -6,6 +6,7 @@ library(dplyr)
 library(ggplot2)
 library(reshape2)
 library(cowplot)
+suppressPackageStartupMessages(source("utils/analysis.reports.R"))
 
 
 ####################################################################################################################
@@ -13,7 +14,7 @@ library(cowplot)
 ####################################################################################################################
 
 # Required RAM: 12GB
-source("Cell-type analysis/utils/subset.cell.type.R")
+source("utils/subset.cell.type.R")
 obj <- subset.cell.type("endo")
 obj@misc$graph.path <- "vascular.niche/graphs"
 lapply(c("vascular.niche", "vascular.niche/graphs", "vascular.niche/data"), dir.create)

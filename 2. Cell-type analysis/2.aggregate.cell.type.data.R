@@ -49,14 +49,14 @@ mapping <- setNames(h5read(file, "index")$values, h5read(file, "index")$ind)
 
 df <- list()
 
-df <- lapply(c("Cell-type analysis/microglia/data/microglia.h5Seurat",
-               "Cell-type analysis/astrocytes/data/astrocytes.h5Seurat",
-               "Cell-type analysis/inhibitory/data/inhibitory.h5Seurat",
-               "Cell-type analysis/oligodendroglia/data/oligodendrocytes/oligodendrocytes.h5Seurat",
-               "Cell-type analysis/oligodendroglia/data/opcs/opcs.h5Seurat",
-               "Cell-type analysis/excitatory/data/cux2+.h5Seurat",
-               "Cell-type analysis/excitatory/data/cux2-.h5Seurat",
-               "Cell-type analysis/vascular.niche/data/vascular.niche.h5Seurat"), 
+df <- lapply(c("2. Cell-type analysis/microglia/data/microglia.h5Seurat",
+               "2. Cell-type analysis/astrocytes/data/astrocytes.h5Seurat",
+               "2. Cell-type analysis/inhibitory/data/inhibitory.h5Seurat",
+               "2. Cell-type analysis/oligodendroglia/data/oligodendrocytes/oligodendrocytes.h5Seurat",
+               "2. Cell-type analysis/oligodendroglia/data/opcs/opcs.h5Seurat",
+               "2. Cell-type analysis/excitatory/data/cux2+.h5Seurat",
+               "2. Cell-type analysis/excitatory/data/cux2-.h5Seurat",
+               "2. Cell-type analysis/vascular.niche/data/vascular.niche.h5Seurat"), 
              function(name)
                LoadH5Seurat(name, assays = list(SCT=c("data")), misc=F, graphs=F, reductions=F, neighbors=F)@meta.data %>% 
                mutate(cell=rownames(.), projid=as.character(projid)) %>%
@@ -86,7 +86,7 @@ for(ct in c("microglia", "astrocytes","inhibitory", "excitatory")) {
   for(name in names(de)) {
     group <- file.path(mapping[[ct]], name)
     safe.remove(group)
-    h5write(readRDS(file.path("Cell-type analysis", ct, de[[name]])) %>% mutate(cluster=as.character(cluster)), file, group)
+    h5write(readRDS(file.path("2. Cell-type analysis", ct, de[[name]])) %>% mutate(cluster=as.character(cluster)), file, group)
   }
 }
 
@@ -98,7 +98,7 @@ for (n in names(sets)) {
   for(name in names(de)) {
     group <- file.path(mapping[[n]], name)
     safe.remove(group)
-    h5write(do.call(rbind, lapply(file.path("Cell-type analysis", n, "data", sets[[n]], de[[name]]), readRDS)), file, group)
+    h5write(do.call(rbind, lapply(file.path("2. Cell-type analysis", n, "data", sets[[n]], de[[name]]), readRDS)), file, group)
   }
 }
 rm(de, ct, name, group, paths, n, sets)
@@ -215,7 +215,7 @@ params <- list(
     Fib.3=c(.95,.87)
   ))
 
-source("Cell-type analysis/utils/pathways.clustering.R")
+source("2. Cell-type analysis/utils/pathways.clustering.R")
 sets <- list(vascular.niche = c("vascular", "mural", "fibroblast"),
              oligodendroglia = c("oligodendrocytes", "opcs"))
 
@@ -226,7 +226,7 @@ for(ct in c("oligodendroglia","microglia", "astrocytes","inhibitory", "excitator
   if(!ct %in% names(sets))
     pathways <- readRDS(file.path(ct, "data/pa.rds"))
   else
-    pathways <- lapply(paste0("Cell-type analysis/", ct, "/data/", sets[[ct]], ".pa.rds"), readRDS) %>% unlist(., recursive=FALSE)
+    pathways <- lapply(paste0("2. Cell-type analysis/", ct, "/data/", sets[[ct]], ".pa.rds"), readRDS) %>% unlist(., recursive=FALSE)
   
   pathways <- lapply(seq_along(pathways), function(i) {
     n <- names(pathways)[i]
@@ -301,9 +301,9 @@ for(ct in c("microglia", "astrocytes","inhibitory", "vascular.niche")) {
   
   # Merge pathway analysis results of different pathway datasets
   if(!ct %in% names(sets))
-    pathways <- readRDS(file.path("Cell-type analysis", ct, "data/pa.pairwise.rds"))
+    pathways <- readRDS(file.path("2. Cell-type analysis", ct, "data/pa.pairwise.rds"))
   else
-    pathways <- lapply(paste0("Cell-type analysis/", ct, "/data/", sets[[ct]], ".pa.pairwise.rds"), readRDS) %>% unlist(., recursive=FALSE)
+    pathways <- lapply(paste0("2. Cell-type analysis/", ct, "/data/", sets[[ct]], ".pa.pairwise.rds"), readRDS) %>% unlist(., recursive=FALSE)
   
   pathways <- lapply(seq_along(pathways), function(i) {
     n <- names(pathways)[i]
@@ -332,7 +332,7 @@ for(ct in c("microglia", "astrocytes","inhibitory", "vascular.niche")) {
 #####################################################################################################################
 # Required RAM: 61GB
 for(name in c("vascular.niche", "microglia", "astrocytes", "inhibitory","oligodendroglia")) {
-  o <- LoadH5Seurat(paste0("Cell-type analysis/", name, "/data/", name, ".h5Seurat"), assays = list(SCT=c("data")), misc=F, graphs=F, neighbors=F, verbose=F)
+  o <- LoadH5Seurat(paste0("2. Cell-type analysis/", name, "/data/", name, ".h5Seurat"), assays = list(SCT=c("data")), misc=F, graphs=F, neighbors=F, verbose=F)
   v <- file.path(mapping[[name]], "umap")
 
   safe.remove(v)
@@ -351,20 +351,20 @@ rm(name)
 # source("Cell-type analysis/utils/unified.umaps.R")
 
 # Append cell-type unified umap: reference and predictions
-ref <- LoadH5Seurat("Cell-type analysis/unified.umap.h5Seurat", assays=list(SCT=c("data")), graphs=F, neighbors=F, verbose=F)
+ref <- LoadH5Seurat("2. Cell-type analysis/unified.umap.h5Seurat", assays=list(SCT=c("data")), graphs=F, neighbors=F, verbose=F)
 df  <- data.frame(cell=colnames(ref), state=ref$state, ref[["umap"]]@cell.embeddings %>% `colnames<-`(c("x","y")))
 
 h5write(df, file, "umap.ref")
-h5write(readRDS("Cell-type analysis/unified.umap.coordinates.rds") %>% data.frame %>% tibble::rownames_to_column(), file, "umap")
+h5write(readRDS("2. Cell-type analysis/unified.umap.coordinates.rds") %>% data.frame %>% tibble::rownames_to_column(), file, "umap")
 rm(ref, df)
 
 # Append excitatory neurons umap: reference and predictions
 # Required RAM: 120GB
-ref <- LoadH5Seurat("Cell-type analysis/excitatory/data/unified.umap.h5Seurat", assays=list(SCT=c("data")), graphs=F, neighbors=F, verbose=F)
+ref <- LoadH5Seurat("2. Cell-type analysis/excitatory/data/unified.umap.h5Seurat", assays=list(SCT=c("data")), graphs=F, neighbors=F, verbose=F)
 df  <- data.frame(cell=colnames(ref), group="excitatory", state=ref$state, ref[["umap"]]@cell.embeddings %>% `colnames<-`(c("x","y")))
 
 h5write(df, file, "neuronal/excitatory/umap.ref")
-h5write(readRDS("Cell-type analysis/excitatory/data/unified.umap.embeddings.rds") %>% `colnames<-`(c("cell","group","state","x","y")), file, "neuronal/excitatory/umap")
+h5write(readRDS("2. Cell-type analysis/excitatory/data/unified.umap.embeddings.rds") %>% `colnames<-`(c("cell","group","state","x","y")), file, "neuronal/excitatory/umap")
 rm(ref, df)
 
 
@@ -432,7 +432,7 @@ summarise.expression <- function(mtx,
 
 # Required RAM: 105 GB
 for(n in c("vascular.niche","microglia","inhibitory","astrocytes","oligodendroglia")) {
-  o <- LoadH5Seurat(paste0("Cell-type analysis/", n, "/data/", n, ".h5Seurat"), assays = list(SCT=c("data")), misc=F, graphs=F, reductions=F, neighbors=F, verbose=F)
+  o <- LoadH5Seurat(paste0("2. Cell-type analysis/", n, "/data/", n, ".h5Seurat"), assays = list(SCT=c("data")), misc=F, graphs=F, reductions=F, neighbors=F, verbose=F)
 
   safe.remove((v <- file.path(mapping[[n]], "gene.exp")))
   message("Appending gene expression to ", v)
@@ -446,8 +446,8 @@ for(n in c("vascular.niche","microglia","inhibitory","astrocytes","oligodendrogl
 rm(n)
 
 # Required RAM: 187GB
-objs <- list(LoadH5Seurat("Cell-type analysis/excitatory/data/cux2-.h5Seurat", assays = list(SCT=c("data")), misc=F, graphs=F, reductions=F, neighbors=F, verbose=F),
-             LoadH5Seurat("Cell-type analysis/excitatory/data/cux2+.h5Seurat", assays = list(SCT=c("data")), misc=F, graphs=F, reductions=F, neighbors=F, verbose=F))
+objs <- list(LoadH5Seurat("2. Cell-type analysis/excitatory/data/cux2-.h5Seurat", assays = list(SCT=c("data")), misc=F, graphs=F, reductions=F, neighbors=F, verbose=F),
+             LoadH5Seurat("2. Cell-type analysis/excitatory/data/cux2+.h5Seurat", assays = list(SCT=c("data")), misc=F, graphs=F, reductions=F, neighbors=F, verbose=F))
 
 states <- unique(c(objs[[1]]$state, objs[[2]]$state))
 for(by.donor in c(T, F)) {
@@ -481,11 +481,11 @@ rm(summarise.expression, name, objs, states, by.donor)
 #                                  Compute module signatures for different cell types                               #
 #####################################################################################################################
 
-source("utils/signatures.R")
+source("2. Cell-type analysis/utils/signatures.R")
 
 for(ct in c("microglia","astrocytes","oligodendroglia","vascular.niche")) {
   # Load object
-  o <- LoadH5Seurat(paste0("Cell-type analysis/", ct, "/data/", ct, ".h5Seurat"), misc=F, graphs=F, reductions=F, neighbors=F, verbose=F)
+  o <- LoadH5Seurat(paste0("2. Cell-type analysis/", ct, "/data/", ct, ".h5Seurat"), misc=F, graphs=F, reductions=F, neighbors=F, verbose=F)
   
   # Arrange gene lists of signatures to evaluate
   signature.df <- do.call(rbind, lapply(names(markers[[ct]]), function(r) 

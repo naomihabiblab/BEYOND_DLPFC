@@ -1,6 +1,6 @@
-source("Cell-type analysis/load.code.env.R")
-source("Other analyses/trait.association.util.R")
-source("BEYOND/utils/utils.R")
+source("2. Cell-type analysis/load.code.env.R")
+source("3. Other analyses/trait.association.util.R")
+source("4. BEYOND/utils/utils.R")
 
 
 ####################################################################################################################
@@ -10,7 +10,7 @@ source("BEYOND/utils/utils.R")
 # -------------------------------------------------------- #
 # State-State Correlations                                 #
 # -------------------------------------------------------- #
-data <- anndata::read_h5ad("Cell-type analysis/data/subpopulation.proportions.h5ad")
+data <- anndata::read_h5ad("2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 data$uns$ss.cor <- list(
   names = colnames(data$X),
   corr = stats::cor(data$X, use = "pairwise.complete.obs", method = "spearman"),
@@ -23,14 +23,14 @@ data$uns$ss.cor$sig <- matrix(cut(data$uns$ss.cor$adj.pval, c(-.1, .0001, .001, 
 data$uns$ss.cor$params <- list(cor.method = "spearman",
                                cor.use = "pairwise.complete.obs",
                                p.adjust.method = "BH")
-anndata::write_h5ad(data, "Cell-type analysis/data/subpopulation.proportions.h5ad")
+anndata::write_h5ad(data, "2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 rm(data)
 
 
 # -------------------------------------------------------------- #
 # Construct communities based on state correlations and dynamics #
 # -------------------------------------------------------------- #
-data <- anndata::read_h5ad("Cell-type analysis/data/subpopulation.proportions.h5ad")
+data <- anndata::read_h5ad("2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 
 # ----------------------------------- #
 #    High Resolution Communities      # 
@@ -88,7 +88,7 @@ data$uns$communities <- list(
   dynamics.colnames = colnames(communities$dynamics.mtx)
 )
 data$var <- cbind(data$var, membership)
-anndata::write_h5ad(data, "Cell-type analysis/data/subpopulation.proportions.h5ad")
+anndata::write_h5ad(data, "2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 rm(data)
 
 

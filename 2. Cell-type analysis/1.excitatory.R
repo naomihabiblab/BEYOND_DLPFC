@@ -1,4 +1,4 @@
-setwd("Cell-type analysis")
+setwd("2. Cell-type analysis")
 
 library(Seurat)
 library(SeuratDisk)
@@ -6,7 +6,7 @@ library(dplyr)
 library(ggplot2)
 library(reshape2)
 library(cowplot)
-
+suppressPackageStartupMessages(source("utils/analysis.reports.R"))
 
 ####################################################################################################################
 ##                                  #  Create Layer Specific Neurons Objects   #                                  ##
@@ -20,7 +20,7 @@ library(cowplot)
 # Create temporary objects of multiple batches                #
 # ----------------------------------------------------------- #
 # Required RAM: 216GB
-source("Cell-type analysis/utils/subset.cell.type.R")
+source("utils/subset.cell.type.R")
 lapply(c("excitatory", "excitatory/graphs", "excitatory/data"), dir.create)
 
 libs <- subset.cell.type("excitatory", remove.doublets=T, return.library.lists=T)
@@ -121,8 +121,6 @@ for(f in c(list.files("excitatory/data", "excitatory.subset.*.h5Seurat", full.na
 # In the case of CUX2+ cells, we again were not able to create a single Seurat object due Seurat's use of 32-bit 
 # matrices (at time of analysis). We therefore created 2 CUX2+ subsets, performed QCs and filtering for each, and
 # only then merged into a single CUX2+ object. Final sub-clustering analysis was done over the joint CUX2+ object.
-
-suppressPackageStartupMessages(source("src/analysis.reports.R"))
 
 # ------------------------------------------------ #
 #            Create CUX2+ Seurat object            #
@@ -289,7 +287,6 @@ while (!is.null(dev.list()))  dev.off()
 ####################################################################################################################
 ##                                #  Sub-clustering analysis for CUX2- cells   #                                  ##
 ####################################################################################################################
-suppressPackageStartupMessages(source("src/analysis.reports.R"))
 
 # ------------------------------------------------ #
 #            Create CUX2- Seurat object            #

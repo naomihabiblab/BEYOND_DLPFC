@@ -1,4 +1,4 @@
-source("Cell-type analysis/load.code.env.R")
+source("2. Cell-type analysis/load.code.env.R")
 
 
 ####################################################################################################################
@@ -13,7 +13,7 @@ files <- list(batch2 = "Iba1_DAPI_FINAL.csv") # batch1 = "Iba1_DAPI.csv" - batch
 names <- c(Children_Cy3_F_Count = "TPRG1", Children_FilterObjects_cy3_F_Count="TPRG1", 
            Children_Cy5_F_Count = "MRC1",  Children_FilterObjects_cy5_F_Count="MRC1", 
            Children_Cy7_F_Count = "CPM",   Children_FilterObjects_cy7_F_Count="CPM")
-path  <- "Other analyses/data/RNAscope quantification/"
+path  <- "3. Other analyses/data/RNAscope quantification/"
 
 df <- lapply(names(files), function(batch) {
   lapply(list.files(file.path(path, batch), pattern = files[[batch]], recursive = TRUE, full.names = TRUE), function(f) {
@@ -52,7 +52,7 @@ rm(files, names, path)
 library(Seurat)
 library(SeuratDisk)
 
-o <- LoadH5Seurat("Cell-type analysis/microglia/data/microglia.h5Seurat", assays=list(SCT=c("counts")), reductions=F, graphs=F, neighbors=F, misc=F, verboth=F)
+o <- LoadH5Seurat("2. Cell-type analysis/microglia/data/microglia.h5Seurat", assays=list(SCT=c("counts")), reductions=F, graphs=F, neighbors=F, misc=F, verboth=F)
 snuc.exp <- FetchData(o, vars = c("state","TPRG1","CPM","MRC1")) %>%
   filter(TPRG1+CPM+MRC1 != 0) %>%
   mutate(state = case_when(state %in% c("Mic.12","Mic.13","Macrophages") ~ state, T~"Other"))
@@ -82,4 +82,4 @@ validations$RNAscope$predicted.proportions <- df %>%
   column_to_rownames("sample")
 
 
-saveRDS(validations, "Other analyses/data/RNAscope.rds")
+saveRDS(validations, "3. Other analyses/data/RNAscope.rds")

@@ -1,4 +1,4 @@
-source("Cell-type analysis/load.code.env.R")
+source("2. Cell-type analysis/load.code.env.R")
 
 
 ####################################################################################################################
@@ -8,8 +8,8 @@ if(!"Celmod" %in% installed.packages())
   devtools::install_github("MenonLab/Celmod")
 
 # Load snRNAseq and bulk data
-data <- anndata::read_h5ad("Cell-type analysis/data/subpopulation.proportions.h5ad")
-bulk <- read.table("Other analyses/data/ROSMAP.bulkRNAseq.adjusted", as.is=T, header=T, row.names = 1) %>% 
+data <- anndata::read_h5ad("2. Cell-type analysis/data/subpopulation.proportions.h5ad")
+bulk <- read.table("3. Other analyses/data/ROSMAP.bulkRNAseq.adjusted", as.is=T, header=T, row.names = 1) %>% 
   `colnames<-`(as.character(as.numeric(gsub("X","",colnames(.)))))
 
 # Keep only donors for which we have both bulk and snuc data
@@ -56,8 +56,8 @@ sub.data <- data[shared.donors,]
                  shared.donors = shared.donors,
                  train.donors = idx)
   
-  saveRDS(fitted.models, paste0("Other analyses/data/celmod/celmod.model", i, ".rds"))
-  saveRDS(celmod, paste0("Other analyses/data/celmod/celmod.results.", i, ".rds"))
+  saveRDS(fitted.models, paste0("3. Other analyses/data/celmod/celmod.model", i, ".rds"))
+  saveRDS(celmod, paste0("3. Other analyses/data/celmod/celmod.results.", i, ".rds"))
   return(celmod)
 })
 
@@ -67,8 +67,8 @@ sub.data <- data[shared.donors,]
 # State proportion correlation                             #
 #   snRNA-seq vs. avg Celmod prediction for test samples   #
 # -------------------------------------------------------- #
-data <- anndata::read_h5ad("Cell-type analysis/data/subpopulation.proportions.h5ad")
-celmod <- lapply(list.files("Other analyses/data/celmod", "celmod.results.*rds", full.names = TRUE), readRDS)
+data <- anndata::read_h5ad("2. Cell-type analysis/data/subpopulation.proportions.h5ad")
+celmod <- lapply(list.files("3. Other analyses/data/celmod", "celmod.results.*rds", full.names = TRUE), readRDS)
 
 predicted.proportions <- lapply(celmod, function(x) 
   x$preds %>% rownames_to_column("projid") %>% 
@@ -105,6 +105,6 @@ celmod <- list(
 )
 data$uns$celmod <- celmod
 
-saveRDS(celmod, "Other analyses/data/celmod.predictions.rds")
-anndata::write_h5ad(data, "Cell-type analysis/data/subpopulation.proportions.h5ad")
+saveRDS(celmod, "3. Other analyses/data/celmod.predictions.rds")
+anndata::write_h5ad(data, "2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 rm(celmod, predicted.proportions, avg.predicted.prop, corrs, data)

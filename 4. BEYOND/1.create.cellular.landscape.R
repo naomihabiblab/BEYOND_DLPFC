@@ -1,11 +1,11 @@
-source("Cell-type analysis/load.code.env.R")
+source("2. Cell-type analysis/load.code.env.R")
 
 
 ####################################################################################################################
 ##                                #  Creating cellular landscape representation #                                 ##
 ####################################################################################################################
 sc <- reticulate::import("scanpy")
-data <- anndata::read_h5ad("Cell-type analysis/data/subpopulation.proportions.h5ad")
+data <- anndata::read_h5ad("2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 
 # Participant clustering based on cellular environment representation
 sc$pp$neighbors(data, n_neighbors = as.integer(10), use_rep = "X", metric = "cosine")
@@ -48,5 +48,5 @@ rm(sub)
 data$obsp <- list()
 for(e in c("X_all_3d_phate","X_core_phate","X_umap","X_tsne")) 
   data$obsp[[paste0("similarity_", e)]] <- embedding.similatity(data$obsm[[e]], knn = 5)
-anndata::write_h5ad(data, "Cell-type analysis/data/subpopulation.proportions.h5ad")
+anndata::write_h5ad(data, "2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 rm(e, sc)

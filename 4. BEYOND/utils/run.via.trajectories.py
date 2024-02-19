@@ -10,8 +10,8 @@ matplotlib.use('Agg')
   
 if __name__ == '__main__':
   p = argparse.ArgumentParser()
-  p.add_argument('--data_file', type=str, default="BEYOND/data/BEYOND.DLPFC.h5ad")
-  p.add_argument('--output_path', type=str, default="all/data/via.pickle")
+  p.add_argument('--data_file', type=str, default="4. BEYOND/data/BEYOND.DLPFC.h5ad")
+  p.add_argument('--output_path', type=str, default="4. BEYOND/data/via.pickle")
   p.add_argument('--k', help='Number of neighbors for neighboring graph over which clustering is performed', type=int, required=True)
   p.add_argument('--big', type=float, nargs = "+", required=True)
   p.add_argument('--small', type=int, nargs = "+", required=True)

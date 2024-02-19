@@ -1,5 +1,5 @@
 
-subset.cell.type <- function(name, proj.name=name, lib.path="~/../Shared/NextSeq/500/", file.pattern="*.seurat.rds", 
+subset.cell.type <- function(name, proj.name=name, lib.path="1. Library preprocessing/data/snRNA-seq libraries", file.pattern="*.seurat.rds", 
                              low.exp.thr = 15, mt.exp.thr=15, remove.doublets=F, remove.features = "^(AC\\d+{3}|AL\\d+{3}|AP\\d+{3}|LINC\\d+{3})",
                              self.merge=F, return.library.lists=F) {
   cell.types = list(microglia=c("Micr"), astrocytes=c("Astr"), endo=c("Endo", "Peri"), oligodendrocytes=c("Olig"), opcs=c("OPC"),

@@ -1,4 +1,4 @@
-setwd("Cell-type analysis")
+setwd("2. Cell-type analysis")
 
 library(Seurat)
 library(SeuratDisk)
@@ -6,6 +6,7 @@ library(dplyr)
 library(ggplot2)
 library(reshape2)
 library(cowplot)
+suppressPackageStartupMessages(source("utils/analysis.reports.R"))
 
 
 ####################################################################################################################
@@ -13,9 +14,7 @@ library(cowplot)
 ####################################################################################################################
 
 # Required RAM: 100GB
-source("Cell-type analysis/utils/subset.cell.type.R")
-suppressPackageStartupMessages(source("src/analysis.reports.R"))
-
+source("utils/subset.cell.type.R")
 obj <- subset.cell.type("oligodendroglia")
 obj@misc$graph.path <- file.path(name, "graphs")
 lapply(c("oligodendroglia", "oligodendroglia/graphs", "oligodendroglia/data"), dir.create)
@@ -62,7 +61,6 @@ SaveH5Seurat(obj, "oligodendroglia/data/oligodendroglia.h5Seurat", overwrite = T
 ####################################################################################################################
 ##                                     #  Search For Low Quality Clusters   #                                     ##
 ####################################################################################################################
-suppressPackageStartupMessages(source("src/analysis.reports.R"))
 
 # Required RAM: 150GB
 obj <- LoadH5Seurat("oligodendroglia/data/oligodendroglia.h5Seurat")

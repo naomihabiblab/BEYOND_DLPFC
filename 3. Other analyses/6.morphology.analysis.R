@@ -1,10 +1,10 @@
-source("Cell-type analysis/load.code.env.R")
+source("2. Cell-type analysis/load.code.env.R")
 
 
 ####################################################################################################################
 ##                                    #  RNAscope & ROSMAP morphology validations  #                              ##
 ####################################################################################################################
-validations <- readRDS("Other analyses/data/RNAscope.rds")
+validations <- readRDS("3. Other analyses/data/RNAscope.rds")
 
 
 # -------------------------------------------------------- #
@@ -26,7 +26,7 @@ validations$RNAscope$morpholoy.association <-
 # ------------------------------------------------------------- #
 # Subpopulation-proportion morphology analysis - ROSMAP cohort  #
 # ------------------------------------------------------------- #
-data <- anndata::read_h5ad("Cell-type analysis/data/subpopulation.proportions.h5ad")
+data <- anndata::read_h5ad("2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 
 others = paste0("Mic.", c(1:11,14:16) )
 df <- data.frame(data$X[,data$var$grouping.by == "Microglia"],
@@ -59,4 +59,4 @@ res <- rbind(res, res.ctrl) %>%
 validations$ROSMAP.PAM.Association <- res
 
 
-saveRDS(validations, "Other analyses/data/RNAscope.rds")
+saveRDS(validations, "3. Other analyses/data/RNAscope.rds")

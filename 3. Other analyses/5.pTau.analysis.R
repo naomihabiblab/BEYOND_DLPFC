@@ -1,16 +1,16 @@
-source("Cell-type analysis/load.code.env.R")
+source("2. Cell-type analysis/load.code.env.R")
 
 
 ####################################################################################################################
 ##                                        #  RNAscope pTAU validations  #                                         ##
 ####################################################################################################################
-validations <- readRDS("Other analyses/data/RNAscope.rds")
+validations <- readRDS("3. Other analyses/data/RNAscope.rds")
 
 
 # -------------------------------------------------------- #
 # Append and summarise pTau quantification for donors      #
 # -------------------------------------------------------- #
-df <- list.dirs("Other analyses/data/pTAU validations/batch2") %>% # batch1 had high background noise and therefore was not used
+df <- list.dirs("3. Other analyses/data/pTAU validations/batch2") %>% # batch1 had high background noise and therefore was not used
   Filter(function(f) file.exists(file.path(f, "MyExpt_Image.csv")) ,.) %>%
   lapply(., function(f) {
     batch = basename(dirname(f))
@@ -31,4 +31,4 @@ validations$pTau$summarised <- df %>% group_by(batch,sample, AD) %>%
   summarise(across(c(pTau_merged, pTau_tangles_plaques, pTau_filaments), list(mean=mean, median=median))) %>% 
   data.frame
 
-saveRDS(validations, "Other analyses/data/RNAscope.rds")
+saveRDS(validations, "3. Other analyses/data/RNAscope.rds")

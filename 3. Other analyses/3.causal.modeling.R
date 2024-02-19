@@ -1,4 +1,4 @@
-source("Cell-type analysis/load.code.env.R")
+source("2. Cell-type analysis/load.code.env.R")
 library(mediation)
 library(lavaan)
 library(semPlot)
@@ -9,9 +9,9 @@ library(semPlot)
 ##                                                 #  Mediation Modeling  #                                       ##
 ####################################################################################################################
 # (ROSMAP data download 04/25/2022)
-source("Cell-type analysis/ROSMAP.metadata.R")
+source("1. Library preprocessing/data/ROSMAP.metadata.R")
 
-data <- anndata::read_h5ad("Cell-type analysis/data/subpopulation.proportions.h5ad")
+data <- anndata::read_h5ad("2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 df.full <- rbind(data.frame(cohort = "discovery", sqrt(data$X[,c("Mic.12","Mic.13","Ast.10","Oli.7")])),
                  data.frame(cohort = "replication", data$uns$celmod$avg.predicted.prop$validation %>% 
                               py_to_r %>% `[`(, c("Mic.12","Mic.13","Ast.10","Oli.7")))) %>% 

@@ -1,4 +1,4 @@
-setwd("Cell-type analysis")
+setwd("2. Cell-type analysis")
 
 library(Seurat)
 library(SeuratDisk)
@@ -6,14 +6,14 @@ library(dplyr)
 library(ggplot2)
 library(reshape2)
 library(cowplot)
-
+suppressPackageStartupMessages(source("utils/analysis.reports.R"))
 
 ####################################################################################################################
 ##                                     #  Create initial cell-type object   #                                     ##
 ####################################################################################################################
 
 # Required RAM: 20GB
-source("Cell-type analysis/utils/subset.cell.type.R")
+source("utils/subset.cell.type.R")
 obj <- subset.cell.type("inhibitory")
 obj@misc$graph.path <- file.path(name, "graphs")
 lapply(c("inhibitory", "inhibitory/graphs", "inhibitory/data"), dir.create)
@@ -32,7 +32,6 @@ SaveH5Seurat(obj, "inhibitory/data/inhibitory.h5Seurat")
 ####################################################################################################################
 ##                                     #  Search For Low Quality Clusters   #                                     ##
 ####################################################################################################################
-suppressPackageStartupMessages(source("src/analysis.reports.R"))
 neuronal.markers = c("MEG3", "PVALB","NPY","SST","VIP","KIT","GAD2","SLC17A7", "RORB", "TOX","FOXP2", "CUX2")
 
 obj <- LoadH5Seurat("inhibitory/data/inhibitory.h5Seurat")

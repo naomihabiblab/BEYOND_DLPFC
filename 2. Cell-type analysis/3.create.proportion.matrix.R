@@ -1,4 +1,4 @@
-source("Cell-type analysis/load.code.env.R")
+source("2. Cell-type analysis/load.code.env.R")
 
 
 ####################################################################################################################
@@ -6,11 +6,11 @@ source("Cell-type analysis/load.code.env.R")
 ####################################################################################################################
 
 # Load cell-type annotations previously pulled from the different cell-type Seurat objects
-df  <- h5read(file = "Cell-type analysis/DLPFC.Green.atlas.h5", name = "annotations") %>% filter(state != "NA")
+df  <- h5read(file = "2. Cell-type analysis/DLPFC.Green.atlas.h5", name = "annotations") %>% filter(state != "NA")
 
 # Retain cell-type annotations only of participants passing QCs (Methods). This step reduces the number
 # of participants from the general 465 participants whose cells form the cell atlas to 437.
-qcs <- read.csv("Cell-type analysis/data/donors.qc.csv") %>% filter(Final_QC == "Pass")
+qcs <- read.csv("2. Cell-type analysis/data/donors.qc.csv") %>% filter(Final_QC == "Pass")
 qcs <- qcs[qcs$projid %in% unique(df$projid),] %>% column_to_rownames("projid")
 df  <- df[df$projid %in% rownames(qcs), ]
 
@@ -42,8 +42,8 @@ gc()
 proportions <- dcast(df, projid~state, value.var = "prevalence", fill = 0, fun.aggregate = sum) %>% tibble::column_to_rownames("projid")
 counts <- dcast(df, projid~state, value.var = "n", fill = 0, fun.aggregate = sum) %>% tibble::column_to_rownames("projid")
 
-saveRDS(proportions, "Cell-type analysis/data/subpopulation.proportion.matrix.rds")
-saveRDS(counts, "Cell-type analysis/data/subpopulation.counts.matrix.rds")
+saveRDS(proportions, "2. Cell-type analysis/data/subpopulation.proportion.matrix.rds")
+saveRDS(counts, "2. Cell-type analysis/data/subpopulation.counts.matrix.rds")
 
 # Create base AnnData representation of subpopulation proportion matrix user for downstream trait-associations and BEYOND analyses
 ids <- rownames(proportions)
@@ -74,17 +74,19 @@ rm(qcs, ids, donor.batches, main.batch)
 # -------------------------------------------------------- #
 # Append participant metadata                              #
 # -------------------------------------------------------- #
-data <- anndata::read_h5ad("Cell-type analysis/data/subpopulation.proportions.h5ad")
+source("1. Library preprocessing/utils/ROSMAP.metadata.R")
+
+data <- anndata::read_h5ad("2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 meta.data <- load.metadata()
 data$obsm$meta.data <- meta.data[data$obs_names,]
-anndata::write_h5ad(data, "Cell-type analysis/data/subpopulation.proportions.h5ad")
+anndata::write_h5ad(data, "2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 rm(meta.data)
 
 
 # -------------------------------------------------------- #
 # Cell type level of aggregation                           #
 # -------------------------------------------------------- #
-data <- anndata::read_h5ad("Cell-type analysis/data/subpopulation.proportions.h5ad")
+data <- anndata::read_h5ad("2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 cell.type.df <- df %>% group_by(projid, class, cell.type) %>%
   dplyr::summarise(n = sum(n), .groups = "drop") %>%
   dplyr::group_by(projid) %>%
@@ -103,6 +105,6 @@ data$uns$cell.types <- list(counts = ct.counts,
                             sqrt.wc.prev = sqrt(ct.c.prev))
 rm(cell.type.df, ct.counts, ct.prev, ct.c.prev)
 
-anndata::write_h5ad(data, "Cell-type analysis/data/subpopulation.proportions.h5ad")
+anndata::write_h5ad(data, "2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 rm(df, data, tables)
 

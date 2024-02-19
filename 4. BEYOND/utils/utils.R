@@ -69,7 +69,7 @@ fit.trajectories.palantir <- function(data, dm, dm.k, palantir.k, scale, root.cl
 }
 
 
-fit.trajectories.via <- function(data.path="BEYOND/data/BEYOND.DLPFC.h5adBEYOND.DLPFC.h5ad", knn, too.big, too.small, root.clusters, exclude.clusters=c()) {
+fit.trajectories.via <- function(data.path="2. Cell-type analysis/data/subpopulation.proportions.h5ad", knn, too.big, too.small, root.clusters, exclude.clusters=c()) {
   if(!"BEYOND.ViaEnv" %in% reticulate::conda_list()[,"name"]) {
     reticulate::conda_create("BEYOND.ViaEnv", python_version = "3.7", packages=c("pybind11"), pip=TRUE)
     reticulate::conda_install("BEYOND.ViaEnv", packages = "hnswlib")
@@ -78,7 +78,7 @@ fit.trajectories.via <- function(data.path="BEYOND/data/BEYOND.DLPFC.h5adBEYOND.
   
   filename <- 'BEYOND/data/via.pickle'
   system(stringr::str_interp(
-    paste("~/r-miniconda/condabin/conda run -n BEYOND.ViaEnv python BEYOND/utils/run.via.trajectories.py",
+    paste("~/r-miniconda/condabin/conda run -n BEYOND.ViaEnv python '4. BEYOND/utils/run.via.trajectories.py'",
           "--data_file ${data.path}",
           "--output_path ${filename}",
           "--k ${as.integer(knn)}",

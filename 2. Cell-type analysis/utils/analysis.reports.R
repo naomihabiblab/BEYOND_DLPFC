@@ -175,8 +175,8 @@ PlotIdentByParam <- function(object, param, ident="ident", stat_compare=T) {
 
 ClusterTraitsCorrelation <- function(object, 
                                      ident, 
-                                     traits = c("age_death", "pAD", "niareagansc", "braaksc","amyloid", "cognep_demog_slope",
-                                                "dlbdx","nft", "tangles", "tdp_stage4", "cvda_4gp2", "caa_4gp"),
+                                     traits = c("age_death", "pAD", "niareagansc", "braaksc","amyloid", "cogng_demog_slope",
+                                                "dlbdx","nft", "tangles"),
                                      correction.method="BH", 
                                      cor.args=list(method="spearman", exact=F)) {
   

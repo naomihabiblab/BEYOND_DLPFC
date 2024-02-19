@@ -12,7 +12,7 @@ library(scCustomize)
 library(Rmagic)
 library(viridis)
 
-source("Other analyses/utils/spatial.utils.R")
+source("3. Other analyses/utils/spatial.utils.R")
 
 markers <- list(Ast.10=c("SMTN","SLC38A2"), Ast.5=c("OSMR","SERPINA3"), Mic.13=c("TREM2","GPNMB"))
 samples <- c("20260284_2", "35941263_2", "50107871_2","50301675_2", "69982533_1", 
@@ -20,7 +20,7 @@ samples <- c("20260284_2", "35941263_2", "50107871_2","50301675_2", "69982533_1"
 
 df <- lapply(samples, function(s) {
   # Load Seurat spatial object and 
-  meta.data = read.csv(file.path("Other analyses/data/", sample, "spot.annotation.csv")) %>% tibble::column_to_rownames("SpotID")
+  meta.data = read.csv(file.path("3. Other analyses/data/", sample, "spot.annotation.csv")) %>% tibble::column_to_rownames("SpotID")
   obj <- preprocess_visium_h5(file.path("Other analyses/data/", samples, "outs"), meta.data=meta.data)
   obj <- subset(obj, features = rownames(obj)[Matrix::rowSums(obj@assays$RNA@counts) > 10])
   
@@ -57,4 +57,4 @@ df <- lapply(samples, function(s) {
                                 sample %in% c("50107871","69982533","35941263","20242958") ~ "prAD")) %>%
   dplyr::select(sample, trajectory, Mic.13, Ast.10, Ast.5)
 
-saveRDS(df, "Other analyses/data/ST.validation.state.signatures.rds")
+saveRDS(df, "3. Other analyses/data/ST.validation.state.signatures.rds")

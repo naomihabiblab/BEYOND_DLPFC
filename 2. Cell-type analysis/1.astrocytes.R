@@ -1,4 +1,4 @@
-setwd("Cell-type analysis")
+setwd("2. Cell-type analysis")
 
 library(Seurat)
 library(SeuratDisk)
@@ -6,14 +6,14 @@ library(dplyr)
 library(ggplot2)
 library(reshape2)
 library(cowplot)
-
+suppressPackageStartupMessages(source("utils/analysis.reports.R"))
 
 ####################################################################################################################
 ##                                     #  Create initial cell-type object   #                                     ##
 ####################################################################################################################
 
 # Required RAM: 74GB
-source("Cell-type analysis/utils/subset.cell.type.R")
+source("utils/subset.cell.type.R")
 obj <- subset.cell.type("astrocytes")
 obj@misc$graph.path <- file.path(name, "graphs")
 lapply(c("astrocytes", "astrocytes/graphs", "astrocytes/data"), dir.create)
@@ -33,8 +33,6 @@ SaveH5Seurat(obj, "astrocytes/data/astrocytes.h5Seurat")
 ####################################################################################################################
 ##                                     #  Search For Low Quality Clusters   #                                     ##
 ####################################################################################################################
-suppressPackageStartupMessages(source("src/analysis.reports.R"))
-
 obj <- LoadH5Seurat("astrocytes/data/astrocytes.h5Seurat")
 obj <- subset(obj, is.doublet == F)
 obj <- SCTransform(obj, variable.features.n = 4000, conserve.memory = T, verbose = F)
