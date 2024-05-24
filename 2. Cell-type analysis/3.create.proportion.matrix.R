@@ -66,7 +66,7 @@ data <- AnnData(
   obsm = list(QCs = qcs[ids,] %>% `rownames<-`(rownames(.) %>% as.character()))
 )
 
-anndata::write_h5ad(data, "Cell-type analysis/data/subpopulation.proportions.h5ad")
+anndata::write_h5ad(data, "2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 rm(qcs, ids, donor.batches, main.batch)
 
 
