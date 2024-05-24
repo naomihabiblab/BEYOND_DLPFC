@@ -41,7 +41,7 @@ fit.trajectories.palantir <- function(data, dm, dm.k, palantir.k, scale, root.cl
   pd <- import("pandas")
   
   X <- t(data[data$obs$clusters %in% root.clusters]$X)
-  medoid <- names(which.min(Matrix::colSums(X - Matrix::rowMeans(X))))
+  medoid <- names(which.min( sqrt(Matrix::colSums( (X - Matrix::rowMeans(X))**2 )) ))
 
   ms.data <- pa$utils$run_diffusion_maps(data.frame(data[!data$obs$clusters %in% exclude.clusters]$X), n_components = as.integer(dm), knn = as.integer(dm.k)) %>%
     pa$utils$determine_multiscale_space(.)

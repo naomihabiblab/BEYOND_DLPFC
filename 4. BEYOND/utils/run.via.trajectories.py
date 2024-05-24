@@ -30,17 +30,17 @@ if __name__ == '__main__':
   if args.exclude_clusters is not None:
     data = data[~data.obs["clusters"].isin(args.exclude_clusters)]
 
-  mass = np.array(data[data.obs["clusters"].isin(args.root_clusters)].X)
-  dist = np.linalg.norm(mass - np.mean(mass, axis=0), axis=1)
-  root = np.where(dist == dist.min())[0]
+  sub = data[data.obs["clusters"].isin(args.root_clusters)]
+  root_sub_index = np.linalg.norm(sub.X - np.mean(sub.X, axis=0), axis=1).argmin()
+  root_index = (data.obs_names == sub.obs_names[root_sub_index]).argmax()
 
-  v0 = via.VIA(data.X, true_label = data.obs["clusters"], root_user=root,
+  v0 = via.VIA(data.X, true_label = data.obs["clusters"], root_user=[root_index],
                knn=args.k, too_big_factor=args.big[0], small_pop=args.small[0],
                is_coarse=True, preserve_disconnected=True, n_iter_leiden=50, num_threads=1)
   v0.run_VIA()
 
   ts = via._get_loc_terminal_states(v0, data.X)
-  v  = via.VIA(data.X, true_label = data.obs["clusters"], root_user=root,
+  v  = via.VIA(data.X, true_label = data.obs["clusters"], root_user=[root_index],
                knn=args.k, too_big_factor=args.big[-1], small_pop=args.small[-1],
                num_mcmc_simulations = 2500,
                super_cluster_labels=v0.labels,
@@ -61,7 +61,7 @@ if __name__ == '__main__':
   import pickle
   with open(args.output_path, 'wb') as handle:
     pickle.dump({"idents": data.obs_names.values, 
-                 "user.root":data.obs_names[root], 
+                 "user.root":data.obs_names[root_index], 
                  "pseudotime": in_full(v.single_cell_pt_markov),
                  "trajectories.scaled": in_full(v.single_cell_bp),
                  "trajectories.normalized": in_full(v.single_cell_bp_rownormed),
