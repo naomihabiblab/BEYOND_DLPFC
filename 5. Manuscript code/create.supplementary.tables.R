@@ -423,7 +423,7 @@ df <- rbind(data$uns$trajectories$palantir$dynamics$fitted.vals %>% py_to_r,
   dplyr::select(feature, trajectory, pseudotime=x, value=y, weight=X.weights., fit, se.fit) %>% 
   mutate(trajectory = recode(trajectory, "ABA"="Alternative Aging", "prAD" = "prAD"))
 
-addWorksheet(wb, (sheet <- "Dynamics fitted Values"), gridLines = TRUE)
+addWorksheet(wb, (sheet <- "Dynamics fitted values"), gridLines = TRUE)
 writeData(wb, sheet = sheet, df, rowNames = FALSE)
 addStyle(wb, sheet = sheet, header.style(), rows = 1, cols = 0:ncol(df)+1, gridExpand = TRUE)
 
@@ -436,7 +436,7 @@ df <- rbind(data$uns$trajectories$palantir$dynamics$pred.vals %>% py_to_r,
   dplyr::select(feature, trajectory, pseudotime=x, fit, se.fit) %>% 
   mutate(trajectory = recode(trajectory, "ABA"="Alternative Aging", "prAD" = "prAD"))
 
-addWorksheet(wb, (sheet <- "Dynamics preicted Values"), gridLines = TRUE)
+addWorksheet(wb, (sheet <- "Dynamics predicted values"), gridLines = TRUE)
 writeData(wb, sheet = sheet, df, rowNames = FALSE)
 addStyle(wb, sheet = sheet, header.style(), rows = 1, cols = 0:ncol(df)+1, gridExpand = TRUE)
 
