@@ -45,7 +45,6 @@ addWorksheet(wb, "Description", gridLines = TRUE)
 # -------------------------------------------------------- #
 # Create sheet for characteristics of snRNA-seq cohort     #
 # -------------------------------------------------------- #
-
 df <- load.metadata() %>% `[`(snuc.donors,) %>% 
   rownames_to_column("projid") %>%
   mutate(core.donor = projid %in% core.donors,
@@ -197,6 +196,21 @@ rm(df, wb, format.sheet)
 ####################################################################################################################
 wb <- createWorkbook(creator = creator, title = "Endophenotypes Associations")
 addWorksheet(wb, "Description", gridLines = TRUE)
+
+
+# -------------------------------------------------------- #
+# Participant QCs n465 -> n437                             #
+# -------------------------------------------------------- #
+df <- read.csv("2. Cell-type analysis/data/donors.qc.csv") %>%
+  rowwise() %>%
+  mutate(projid = donor.mapping[as.character(projid)]) %>% 
+  rename(individualID = projid)
+
+addWorksheet(wb, (sheet <- "Participant inclusion QCs"), gridLines = TRUE)
+writeData(wb, sheet, df, startRow = 1, rowNames = FALSE)
+
+addStyle(wb, sheet = sheet, header.style(), rows = 1, cols = 0:ncol(df)+1, gridExpand = TRUE)
+
 
 # -------------------------------------------------------- #
 # Subpopulation proportions matrix                         #
@@ -375,14 +389,17 @@ addStyle(wb, sheet = sheet, header.style(), rows = 1, cols = 0:ncol(df)+1, gridE
 algs <- list(via="VIA", palantir="Palantir")
 
 for(a in names(algs)) {
-  traj <- data$uns$trajectories[[a]]
+  traj      <- data$uns$trajectories[[a]]
   terminals <- traj$terminals %>% py_to_r %>% select(x=terminal) %>% rownames_to_column("terminal") %>% column_to_rownames("x")
+  root      <- setNames(c(T), data$uns$trajectories[[a]]$user.root)
+  
   df <- data.frame(pseudotime = traj$pseudotime,
                    traj$branch.probs %>% py_to_r) %>%
-    rownames_to_column("donor.id") %>%
-    mutate(terminal = terminals[donor.id,"terminal"],
-           ST.include = ST.donors[donor.id,"trajectory"],
-           donor.id = donor.mapping[donor.id])
+    rownames_to_column("individualID") %>%
+    mutate(terminal = terminals[individualID,"terminal"],
+           ST.include = ST.donors[individualID,"trajectory"],
+           root = root[individualID],
+           individualID = donor.mapping[individualID])
   
   
   addWorksheet(wb, (sheet <- paste(algs[[a]], "Trajectories")), gridLines = TRUE)
@@ -410,7 +427,17 @@ addStyle(wb, sheet = sheet, header.style(), rows = 1, cols = 0:ncol(df)+1, gridE
 # -------------------------------------------------------- #
 df <- cbind(data$obsm$communities, data$obsm$sub.communities) %>% rownames_to_column("donor.id")
   
-addWorksheet(wb, (sheet <- "Donors' community proportion"), gridLines = TRUE)
+addWorksheet(wb, (sheet <- "Participant comm. prop."), gridLines = TRUE)
+writeData(wb, sheet = sheet, df, rowNames = FALSE)
+addStyle(wb, sheet = sheet, header.style(), rows = 1, cols = 0:ncol(df)+1, gridExpand = TRUE)
+
+
+# -------------------------------------------------------------- #
+# Community-endophenotype associations                           #
+# -------------------------------------------------------------- #
+df <- data$uns$communities$trait.association %>% py_to_r
+
+addWorksheet(wb, (sheet <- "Community endophenotype associations"), gridLines = TRUE)
 writeData(wb, sheet = sheet, df, rowNames = FALSE)
 addStyle(wb, sheet = sheet, header.style(), rows = 1, cols = 0:ncol(df)+1, gridExpand = TRUE)
 
@@ -439,6 +466,9 @@ df <- rbind(data$uns$trajectories$palantir$dynamics$pred.vals %>% py_to_r,
 addWorksheet(wb, (sheet <- "Dynamics predicted values"), gridLines = TRUE)
 writeData(wb, sheet = sheet, df, rowNames = FALSE)
 addStyle(wb, sheet = sheet, header.style(), rows = 1, cols = 0:ncol(df)+1, gridExpand = TRUE)
+
+
+
 
 
 saveWorkbook(wb, "5. Manuscript code/data/Supplementary Table 5 - BEYOND analysis results.xlsx", overwrite = TRUE)
