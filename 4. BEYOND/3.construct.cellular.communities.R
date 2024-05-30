@@ -109,7 +109,7 @@ data$uns$communities$dynamics <- fit.dynamics(pseudotime = data$uns$trajectories
 
 data$uns$communities$trait.association <- associate.traits(
   traits = data$obsm$meta.data[,c("sqrt.amyloid_mf","sqrt.tangles_mf","cogng_demog_slope")],
-  covariates = cbind(data$obsm$communities, data$obsm$sub.communities %>% dplyr::select(-`NA.`)),
+  covariates = sqrt(cbind(data$obsm$communities, data$obsm$sub.communities %>% dplyr::select(-`NA.`))),
   controls = data.frame(data$obsm$meta.data[,c("age_death","msex","pmi")], data$obsm$QCs[,c("Estimated_Number_of_Cells")]))
 
 anndata::write_h5ad(data, "Cell-type analysis/data/subpopulation.proportions.h5ad")

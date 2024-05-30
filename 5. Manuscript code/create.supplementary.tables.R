@@ -432,14 +432,16 @@ writeData(wb, sheet = sheet, df, rowNames = FALSE)
 addStyle(wb, sheet = sheet, header.style(), rows = 1, cols = 0:ncol(df)+1, gridExpand = TRUE)
 
 
+
 # -------------------------------------------------------------- #
 # Community-endophenotype associations                           #
 # -------------------------------------------------------------- #
 df <- data$uns$communities$trait.association %>% py_to_r
 
-addWorksheet(wb, (sheet <- "Community endophenotype associations"), gridLines = TRUE)
+addWorksheet(wb, (sheet <- "Community endophe. assoc."), gridLines = TRUE)
 writeData(wb, sheet = sheet, df, rowNames = FALSE)
 addStyle(wb, sheet = sheet, header.style(), rows = 1, cols = 0:ncol(df)+1, gridExpand = TRUE)
+
 
 
 # ------------------------------------------------------------ #
@@ -466,9 +468,6 @@ df <- rbind(data$uns$trajectories$palantir$dynamics$pred.vals %>% py_to_r,
 addWorksheet(wb, (sheet <- "Dynamics predicted values"), gridLines = TRUE)
 writeData(wb, sheet = sheet, df, rowNames = FALSE)
 addStyle(wb, sheet = sheet, header.style(), rows = 1, cols = 0:ncol(df)+1, gridExpand = TRUE)
-
-
-
 
 
 saveWorkbook(wb, "5. Manuscript code/data/Supplementary Table 5 - BEYOND analysis results.xlsx", overwrite = TRUE)
