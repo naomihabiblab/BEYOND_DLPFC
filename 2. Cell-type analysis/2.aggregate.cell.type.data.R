@@ -13,7 +13,7 @@ safe.remove <- function(n, f=file) {
            })
 }
 
-file <- "Cell-type analysis/DLPFC.Green.atlas.h5"
+file <- "2. Cell-type analysis/data/DLPFC.Green.atlas.h5"
 
 if(FALSE) {
   h5createFile(file)
