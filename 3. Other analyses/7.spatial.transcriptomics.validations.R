@@ -1,3 +1,8 @@
+
+
+####################################################################################################################
+##                                       #  Initial QCs and Quantification  #                                     ##
+####################################################################################################################
 #' Natacha Comandante-Lou (nc3018 at columbia dot edu)
 
 library(Seurat)
@@ -15,8 +20,8 @@ library(viridis)
 source("3. Other analyses/utils/spatial.utils.R")
 
 markers <- list(Ast.10=c("SMTN","SLC38A2"), Ast.5=c("OSMR","SERPINA3"), Mic.13=c("TREM2","GPNMB"))
-samples <- c("20260284_2", "35941263_2", "50107871_2","50301675_2", "69982533_1", 
-             "50500136_3", "20242958_2", "20865035_2", "11327005_1", "20254902_2")
+samples <- c("R7594705", "R3631183", "R1777884", "R5955028", "R7876628",
+             "R4077358", "R6665276", "R8882846", "R3111222", "R2006886")
 
 df <- lapply(samples, function(s) {
   # Load Seurat spatial object and 
@@ -52,9 +57,91 @@ df <- lapply(samples, function(s) {
            Ast.5 = rowSums(select(., matches(markers$Ast.5))),
            Mic.13 = rowSums(select(., matches(markers$Mic.13))))
 }) %>% do.call(rbind, .) %>%
-  mutate(trajectory = case_when(sample %in% c("20254902","50301675","11327005","20260284") ~ "Early",
-                                sample %in% c("20865035","50500136") ~ "ABA",
-                                sample %in% c("50107871","69982533","35941263","20242958") ~ "prAD")) %>%
+  mutate(trajectory = case_when(sample %in% c("R3111222","R8882846","R4077358","R1777884") ~ "Early",
+                                sample %in% c("R2006886","R6665276") ~ "ABA",
+                                sample %in% c("R3631183","R5955028","R7594705","R7876628") ~ "prAD")) %>%
   dplyr::select(sample, trajectory, Mic.13, Ast.10, Ast.5)
 
 saveRDS(df, "3. Other analyses/data/ST.validation.state.signatures.rds")
+
+
+####################################################################################################################
+##                                        #  ST Co-localization Analysis  #                                       ##
+####################################################################################################################
+
+results <- list()
+df <- readRDS("3. Other analyses/data/ST.validation.state.signatures.rds") %>%
+  arrange(trajectory, sample) %>% mutate(sample=paste(trajectory, sample))
+
+
+# -------------------------------------------------------- #
+# Within participant Mic.13-Ast.10 colocalization          #
+# -------------------------------------------------------- #
+vals <- df[,c("sample","trajectory")] %>% unique %>% `rownames<-`(NULL)
+vals <- lapply(1:nrow(vals), function(i){ 
+  t <- cor.test(df[df$sample == vals[i,"sample"], "Ast.10"], df[df$sample == vals[i,"sample"], "Mic.13"], alternative = "greater")
+  vals[i,] %>% mutate(cor=t$estimate, pval=t$p.value)
+}) %>% do.call(rbind,.) %>%
+  mutate(adj.pval = p.adjust(pval, method="BH"),
+         sig = cut(adj.pval, c(-.1, .0001, .001, .01, .05, Inf), c("****","***", "**", "*", "")),
+         is.sig = adj.pval < .01) %>% 
+  arrange(trajectory)
+
+results$mic13.ast10.colocalization <- vals
+rm(vals)
+
+
+# -------------------------------------------------------- #
+# Summarize Mic.13-Ast.10 colocalization                   #
+# -------------------------------------------------------- #
+corrs <- results$mic13.ast10.colocalization %>% split(., .$trajectory) %>% lapply(., \(v) v$cor)
+results$mic13.ast10.colocalization.summarize <- 
+  t.test(corrs$prAD, c(corrs$ABA, corrs$Early), alternative = "greater")
+
+
+# -------------------------------------------------------- #
+# Within participant Ast.10-Ast.5 colocalization           #
+# -------------------------------------------------------- #
+
+# Obtain mean Ast.10 and Ast.5 for all participants
+vals <- df %>% 
+  group_by(trajectory, sample) %>% 
+  summarise(across(c(Ast.10, Ast.5), mean), .groups = "drop") %>%
+  mutate(`10.vs.5` = log(Ast.10/Ast.5))
+
+# For prAD or ABA participants test colocalization
+vals <- vals %>% 
+  merge(., 
+        rbind(
+          # For prAD participants - is mean Ast.10 > Ast.5
+          lapply(vals[vals$trajectory == "prAD", ]$sample, \(s) {
+            t <- t.test(df[df$sample == s, "Ast.10"], df[df$sample == s, "Ast.5"], "greater")
+            data.frame(sample = s, test = "Is Ast.10 > Ast.5", t.stat = t$statistic, pval=t$p.value)
+          }) %>% do.call(rbind, .),
+          
+          # For ABA participants - is mean Ast.55 > Ast.10
+          lapply(vals[vals$trajectory == "ABA", ]$sample, \(s) {
+            t <- t.test(df[df$sample == s, "Ast.5"], df[df$sample == s, "Ast.10"], "greater")
+            data.frame(sample = s, test = "Is Ast.5 > Ast.10", t.stat = t$statistic, pval=t$p.value)
+          }) %>% do.call(rbind, .)),
+        all.x=TRUE) %>%
+  mutate(adj.pval = p.adjust(pval, method="BH"),
+         sig = cut(adj.pval, c(-.1, .0001, .001, .01, .05, Inf), c("****","***", "**", "*", "")),
+         is.sig = adj.pval < .01) %>%
+  arrange(trajectory, sample) %>%
+  column_to_rownames("sample")
+
+results$ast10.ast5.colocalization <- vals
+rm(vals)
+
+
+# -------------------------------------------------------- #
+# Summarize Ast.10-Ast.5 colocalization                    #
+# -------------------------------------------------------- #
+
+`10.vs.5` <- results$ast10.ast5.colocalization %>% split(., .$trajectory) %>% lapply(., \(v) v$`10.vs.5`)
+results$ast.10.ast5.colocalization.summarize <- 
+  t.test(`10.vs.5`$prAD, `10.vs.5`$ABA, alternative = "greater")
+rm(`10.vs.5`)
+
+saveRDS(results, "3. Other analyses/data/ST.validation.rds")

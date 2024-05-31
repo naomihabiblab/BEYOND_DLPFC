@@ -13,27 +13,22 @@ add.header.style <- function(wb, sheet, ncols) {
 }
 
 
-# Swap donor identities with a sequential index 1:n
+# Swap participant ids from the ROSMAP internal projid to the external individualID
 data <- anndata::read_h5ad("2. Cell-type analysis/data/subpopulation.proportions.h5ad")
-core.donors <- data$obs_names
-ST.donors <- readRDS("Manuscript code/data/ST.validation.state.signatures.corrected.rds") %>% 
-  select(donor.id = sample, trajectory=trajectory_group) %>% unique %>% 
-  mutate(donor.id = gsub("_.*","",donor.id)) %>% 
-  filter(trajectory != "Early") %>% 
-  `rownames<-`(.$donor.id) %>% select(trajectory)
+core.donors <- as.character(data$obs_names)
 
-snuc.donors <- openxlsx::read.xlsx("5. Manuscript code/data/ROSMAP 10X Processing  Tracker.xlsx", sheet = "Processed Batches") %>%
-  filter(!Batch %in% c("B1", "B2", "B3") & StudyCode != "MAP83034844") %>%
+snuc.donors <- openxlsx::read.xlsx("5. Manuscript code/data/ROSMAP 10X Processing Tracker.xlsx", sheet = "Processed Batches") %>%
+  filter(!Batch %in% c("B1", "B2", "B3") & (!StudyCode %in% c("MAP83034844", "MAP74718818"))) %>%
   pull(StudyCode) %>% unique %>% gsub("ROS|MAP", "", .) %>% as.numeric %>% as.character
+snuc.donors <- c(snuc.donors, "44299049")
 
 bulk.donors <- data$uns$celmod$avg.predicted.prop$validation$index
 
-donor.mapping <- c(snuc.donors, data$obs_names, bulk.donors) %>% unique
-donor.mapping <- setNames(seq_along(donor.mapping), donor.mapping)
+donor.mapping <- read.csv("5. Manuscript code/data/ROSMAP_clinical.csv") %>% dplyr::select(projid, individualID)
+donor.mapping <- setNames(donor.mapping$individualID, donor.mapping$projid)
 data$obs_names <- as.character(donor.mapping[data$obs_names])
 
-stack(donor.mapping) %>% `colnames<-`(c("supp.table.id","ROSMAP.proj.id")) %>% 
-  saveRDS("5. Manuscript code/data/Supp.to.ROSMAP.id.mapping.rds")
+
 
 ####################################################################################################################
 ##                            #  Supplementary Table 1 - Clinicopathological Characteristics  #                   ##
@@ -397,7 +392,6 @@ for(a in names(algs)) {
                    traj$branch.probs %>% py_to_r) %>%
     rownames_to_column("individualID") %>%
     mutate(terminal = terminals[individualID,"terminal"],
-           ST.include = ST.donors[individualID,"trajectory"],
            root = root[individualID],
            individualID = donor.mapping[individualID])
   
@@ -471,3 +465,33 @@ addStyle(wb, sheet = sheet, header.style(), rows = 1, cols = 0:ncol(df)+1, gridE
 
 
 saveWorkbook(wb, "5. Manuscript code/data/Supplementary Table 5 - BEYOND analysis results.xlsx", overwrite = TRUE)
+
+
+
+####################################################################################################################
+##                            #  Supplementary Table 6 - Spatial Transcriptomics Validations  #                   ##
+####################################################################################################################
+
+vals <- readRDS("3. Other analyses/data/ST.validation.rds")
+wb <- createWorkbook(creator = creator, title = "Spatial transcriptomics validations")
+addWorksheet(wb, "Description", gridLines = TRUE)
+
+# -------------------------------------------------------- #
+# Mic.13-Ast.10 prAD co-localization analysis              #
+# -------------------------------------------------------- #
+df <- vals$mic13.ast10.colocalization %>% mutate(sample = gsub(".* ", "", sample))
+addWorksheet(wb, (sheet <- "Mic.13-Ast.10 co-localization"), gridLines = TRUE)
+writeData(wb, sheet = sheet, df, rowNames = FALSE)
+addStyle(wb, sheet = sheet, header.style(), rows = 1, cols = 0:ncol(df)+1, gridExpand = TRUE)
+
+
+# -------------------------------------------------------- #
+# Ast.10-Ast.5 mutual exclusivity analysis                 #
+# -------------------------------------------------------- #
+df <- vals$ast10.ast5.colocalization %>% rownames_to_column("sample") %>% mutate(sample = gsub(".* ", "", sample))
+addWorksheet(wb, (sheet <- "Ast.10-Ast.5 mutual exclusivity"), gridLines = TRUE)
+writeData(wb, sheet = sheet, df, rowNames = FALSE)
+addStyle(wb, sheet = sheet, header.style(), rows = 1, cols = 0:ncol(df)+1, gridExpand = TRUE)
+
+
+saveWorkbook(wb, "5. Manuscript code/data/Supplementary Table 6 - Spatial transcriptomics validations.xlsx", overwrite = TRUE)

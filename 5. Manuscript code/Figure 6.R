@@ -8,7 +8,7 @@ source("5. Manuscript code/utils.R")
 # ----------------------------------------------------------------------------------------------------------------- #
 #                                       Panel A - Dynamics - states of interest                                     #
 # ----------------------------------------------------------------------------------------------------------------- #
-pdf(file.path(path, "6A.pdf"), width=embed.width, height=embed.height.small)
+pdf(file.path(panel.path, "6A.pdf"), width=embed.width, height=embed.height.small)
 for(states in state.dynamics.sets) {
   print(plot.dynamics(names(states), cols = states, overlap.pseudotime=.1, label=TRUE) + 
     theme(strip.text = element_blank(), 
@@ -19,7 +19,6 @@ for(states in state.dynamics.sets) {
 }
 while (!is.null(dev.list()))  dev.off()
 rm(states)
-
 
 
 
@@ -105,7 +104,7 @@ pseudotime <- Heatmap(pseudotime,
                       right_annotation = rowAnnotation(n=anno_mark(1, "pseudotime")))
 
 # Save figure of all heatmaps
-pdf(file.path(path, "6B.1.pdf"), width=embed.width*1.5, height=embed.height*2)
+pdf(file.path(panel.path, "6B.1.pdf"), width=embed.width*1.5, height=embed.height*2)
 draw(modifyList(modifyList(hm.comms, hm.traits), list(ps=pseudotime)) 
      %>% base::Reduce("%v%", .), ht_gap = unit(1, "pt"))
 while (!is.null(dev.list()))  dev.off()
@@ -150,7 +149,7 @@ hm <- Heatmap(
   right_annotation = rowAnnotation(states = anno_mark(marks, names(marks)))
 )
 
-pdf(file.path(path, "6B.2.pdf"), width=embed.width*2, height=embed.height*2)
+pdf(file.path(panel.path, "6B.2.pdf"), width=embed.width*2, height=embed.height*2)
 draw(hm)
 while (!is.null(dev.list()))  dev.off()
 
@@ -163,7 +162,7 @@ rm(dyn.adjacency, corr, mtx, breaks, cols, cols.fun, marks, mark.states, hm, sta
 # ----------------------------------------------------------------------------------------------------------------- #
 comm.cols <- list(C1="springgreen4", C2.2="darkorchid4", C2.3="firebrick4", C3="firebrick4")
 
-pdf(file.path(path, "6C.pdf"), width=embed.width, height=embed.height)
+pdf(file.path(panel.path, "6C.pdf"), width=embed.width, height=embed.height)
 plot_grid(plot.dynamics(c("C1", "C2.2","C2.3"), dynamics = data$uns$communities$dynamics, cols = comm.cols, legend.position = "none", overlap.pseudotime = .1) + labs(x=NULL, y=NULL),
           plot.dynamics(paste0("C",c(1,3)), dynamics = data$uns$communities$dynamics, cols = comm.cols, legend.position = "none", overlap.pseudotime = .1) + labs(x=NULL, y=NULL),
           ncol=1)
@@ -175,7 +174,7 @@ rm(comm.cols)
 # ----------------------------------------------------------------------------------------------------------------- #
 #                                       Panel D - Communities trait associations                                    #
 # ----------------------------------------------------------------------------------------------------------------- #
-pdf(file.path(path, "6D.pdf"), width=embed.width*.5, height=embed.height)
+pdf(file.path(panel.path, "6D.pdf"), width=embed.width*.5, height=embed.height)
 plot.trait.associations(py_to_r(data$uns$communities$trait.association) %>% 
                           rename(state=covariate), 
                         params = names(AD.traits),
@@ -203,7 +202,7 @@ states <- data$var %>%
   rownames_to_column() %>%
   unstack(rowname~grouping.by)
 
-pdf(file.path(path, "6F.pdf"), width=embed.width, height=embed.height)
+pdf(file.path(panel.path, "6F.pdf"), width=embed.width, height=embed.height)
 lapply(list(c("Mic.12","Mic.13"), c("OPC.1","Ast.3"), c("Ast.9","Ast.10","Oli.13")), function(vals)
   do.call(rbind, lapply(names(states), function(ct) 
     h5read(data.extended, file.path(mapping[[ct]], "pa")) %>% 
@@ -314,25 +313,13 @@ while (!is.null(dev.list()))  dev.off()
 #                                               Panel G - Mic.13-Ast.10 colocalization                              #
 # ----------------------------------------------------------------------------------------------------------------- #
 cols <- list(`Early/ABA`=green2purple(5)[2], prAD=green2purple(5)[4])
-df <- readRDS("3. Other analyses/data/ST.validation.state.signatures.rds") %>% 
+df <- readRDS("3. Other analyses/data/ST.validation.rds")$mic13.ast10.colocalization %>% 
   mutate(trajectory = case_when(trajectory %in% c("Early","ABA") ~ "Early/ABA", .default = trajectory))
 
-vals <- df[,c("sample","trajectory")] %>% unique %>% `rownames<-`(NULL)
-vals <- lapply(1:nrow(vals), function(i){ 
-  t <- cor.test(df[df$sample == vals[i,"sample"], "Ast.10"], df[df$sample == vals[i,"sample"], "Mic.13"], alternative = "greater")
-  vals[i,] %>% mutate(cor=t$estimate, pval=t$p.value)
-}) %>% do.call(rbind,.) %>%
-  mutate(adj.pval = p.adjust(pval, method="BH"),
-         sig = cut(adj.pval, c(-.1, .0001, .001, .01, .05, Inf), c("****","***", "**", "*", "")),
-         is.sig = adj.pval < .01) %>% 
-  arrange(trajectory)
-
-
-pdf(file.path(path, "6G.pdf"), width=embed.width.small*1.2, height=embed.height.small)
-ggplot(vals, aes(trajectory, cor, fill=trajectory)) + 
+pdf(file.path(panel.path, "6F.pdf"), width=embed.width.small*1.2, height=embed.height.small)
+ggplot(df, aes(trajectory, cor, fill=trajectory)) + 
   geom_boxplot(outlier.size = 0) + 
   geom_point(aes(shape=is.sig)) + 
-  ggpubr::stat_compare_means(method.args = list(alternative="greater"), method = "t.test", comparisons = list(c("prAD",c("Early/ABA")))) + 
   scale_fill_manual(values=cols) + 
   scale_shape_manual(values = list("TRUE"=16, "FALSE"=1))+
   theme_classic()
@@ -342,35 +329,16 @@ while (!is.null(dev.list()))  dev.off()
 #                                                 Panel H - Ast.10-Ast.5 exclusivity                                #
 # ----------------------------------------------------------------------------------------------------------------- #
 cols <- list(ABA=green2purple(5)[2], prAD=green2purple(5)[4], Early = "grey70")
-df <- readRDS("3. Other analyses/data/ST.validation.state.signatures.rds")
-
-vals <- df[,c("sample","trajectory")] %>% unique %>% `rownames<-`(NULL)
-vals <- rbind(
-  lapply(vals[vals$trajectory == "prAD", "sample"], function(sample) {
-    t <- t.test(df[df$sample == sample, "Ast.10"], df[df$sample == sample, "Ast.5"], "greater")
-    data.frame(sample=sample, Ast.10.mean=t$estimate[[1]], Ast.5.mean=t$estimate[[2]], t.stat=t$statistic, pval=t$p.value)
-  }) %>% do.call(rbind, .),
-  
-  lapply(vals[vals$trajectory == "ABA", "sample"], function(sample) {
-    t <- t.test(df[df$sample == sample, "Ast.5"], df[df$sample == sample, "Ast.10"], "greater")
-    data.frame(sample=sample, Ast.10.mean=t$estimate[[2]], Ast.5.mean=t$estimate[[1]], t.stat=t$statistic, pval=t$p.value)
-  }) %>% do.call(rbind, .)) %>%
-  mutate(adj.pval = p.adjust(pval, method="BH"),
-         sig = cut(adj.pval, c(-.1, .0001, .001, .01, .05, Inf), c("****","***", "**", "*", "")),
-         is.sig = adj.pval < .01,
-         `10.vs.5` = log(Ast.10.mean/Ast.5.mean)) %>% 
-  merge(vals, ., by.x="sample", by.y="sample") %>%
-  arrange(trajectory, sample)
+df <- readRDS("3. Other analyses/data/ST.validation.rds")$ast10.ast5.colocalization
 
 
-pdf(file.path(path, "6H.1.pdf"), width=embed.width.small, height=embed.height)
-df %>% group_by(trajectory, sample) %>% summarise(across(c(Ast.10, Ast.5), mean)) %>%
-  pivot_longer(cols = c("Ast.10", "Ast.5"), names_to = "state") %>%
+pdf(file.path(panel.path, "6H.1.pdf"), width=embed.width.small, height=embed.height)
+df %>% pivot_longer(cols = c("Ast.10", "Ast.5"), names_to="state") %>% 
+  select(trajectory, state, value) %>%
   ggplot(aes(trajectory, value, fill=trajectory)) + 
   geom_violin() +
   geom_point() +
   facet_wrap(~state, ncol=1, scales = "free") + 
-  ggpubr::stat_compare_means(method.args = list(alternative="greater")) + 
   theme_classic() +
   theme(strip.background = element_blank(), 
         legend.position = "none") + 
@@ -378,12 +346,10 @@ df %>% group_by(trajectory, sample) %>% summarise(across(c(Ast.10, Ast.5), mean)
 while (!is.null(dev.list()))  dev.off()
 
 
-
-pdf(file.path(path, "6H.2.pdf"), width=embed.width, height=embed.height)
-ggplot(vals, aes(trajectory, `10.vs.5`, fill=trajectory)) + 
+pdf(file.path(panel.path, "6H.2.pdf"), width=embed.width, height=embed.height)
+ggplot(df %>% filter(trajectory != "Early"), aes(trajectory, `10.vs.5`, fill=trajectory)) + 
   geom_boxplot(outlier.size = 0) + 
   geom_point(aes(shape=is.sig)) + 
-  ggpubr::stat_compare_means(method.args = list(alternative="greater"), method = "t.test", comparisons = list(c("ABA","prAD"))) + 
   scale_fill_manual(values=cols) + 
   scale_shape_manual(values = list("TRUE"=16, "FALSE"=1))+
   theme_classic()
@@ -399,7 +365,7 @@ while (!is.null(dev.list()))  dev.off()
 #                             Panel A - Dynamics - states of interest - including points                            #
 # ----------------------------------------------------------------------------------------------------------------- #
 
-pdf(file.path(path, "s9A.pdf"), width=embed.width, height=embed.height.small)
+pdf(file.path(panel.path, "s9A.pdf"), width=embed.width, height=embed.height.small)
 for(states in state.dynamics.sets) {
   print(plot.dynamics(names(states), cols = states, overlap.pseudotime=.1, label=TRUE, include.points = TRUE) + 
           theme(strip.text = element_blank(), 
@@ -463,7 +429,7 @@ la <- lapply(names(pos), function(comm)
   `[`(graph %>% pull(name),)
 
 
-pdf(file.path(path, "s9B.pdf"),width=3*1.5, height=3)
+pdf(file.path(panel.path, "s9B.pdf"),width=3*1.5, height=3)
 for(configuration in list(list("correlation", .2, TRUE),
                           list("correlation", .2, FALSE),
                           list("dynamics.adjacency", .2, TRUE),
@@ -511,7 +477,7 @@ rm(p, configuration, la, pos, graph, labelled, communities)
 # ----------------------------------------------------------------------------------------------------------------- #
 comm.cols <- list(C1="springgreen4", C1.1="springgreen4", C1.2="olivedrab4", C2="darkorchid4", C2.1="springgreen4", C2.2="darkorchid4", C2.3="firebrick4", C3="firebrick4")
 
-pdf(file.path(path, "s9C.pdf"), width=embed.width, height=embed.height*1.5)
+pdf(file.path(panel.path, "s9C.pdf"), width=embed.width, height=embed.height*1.5)
 plot_grid(plot.dynamics(c("C1", "C2","C3"), dynamics = data$uns$communities$dynamics, cols = comm.cols, include.points = TRUE,  legend.position = c(3,3), overlap.pseudotime = .1) + labs(x=NULL, y=NULL),
           plot.dynamics(c("C1.1","C1.2"), dynamics = data$uns$communities$dynamics, cols = comm.cols, include.points = TRUE,legend.position = c(3,3), overlap.pseudotime = .1) + labs(x=NULL, y=NULL),
           plot.dynamics(c("C2.1","C2.2","C2.3"), dynamics = data$uns$communities$dynamics, cols = comm.cols, include.points = TRUE,legend.position = c(3,3), overlap.pseudotime = .1) + labs(x=NULL, y=NULL),
@@ -524,7 +490,7 @@ rm(comm.cols)
 # ----------------------------------------------------------------------------------------------------------------- #
 #                                       Panel D - Replication state dynamics                                        #
 # ----------------------------------------------------------------------------------------------------------------- #
-pdf(file.path(path, "s9D.pdf"), width=embed.width, height=embed.height.small)
+pdf(file.path(panel.path, "s9D.pdf"), width=embed.width, height=embed.height.small)
 for(states in state.dynamics.sets) {
   print(plot.dynamics(names(states), cols = states, data. = bulk, dynamics = bulk$uns$trajectories$dynamics, overlap.pseudotime=.2, label=TRUE, include.points = TRUE) + 
           theme(strip.text = element_blank(), 
@@ -548,7 +514,7 @@ df <- data$obsm$X_core_phate %>% `colnames<-`(c("PHATE_1","PHATE_2")) %>% filter
   merge(readRDS("3. Other analyses/data/ST.validation.state.signatures.rds") %>% select(trajectory, sample) %>% unique, by.x="Row.names", by.y="sample", all.x=TRUE) %>% 
   arrange(!is.na(trajectory))
 
-pdf(file.path(path, "s9E.pdf"), width=embed.width, height=embed.height)
+pdf(file.path(panel.path, "s9E.pdf"), width=embed.width, height=embed.height)
 ggplot(df, aes(PHATE_1, PHATE_2, color=trajectory)) + 
   geom_point() + 
   ggrepel::geom_label_repel(aes(label=Row.names),data = df %>% filter(!is.na(trajectory))) + 
@@ -570,7 +536,7 @@ df <- readRDS("3. Other analyses/data/ST.validation.state.signatures.rds") %>%
   arrange(trajectory, sample) %>% mutate(sample=paste(trajectory, sample))
 
 
-pdf(file.path(path, "s9F.pdf"), width=embed.height.small*length(unique(df$sample)), height=embed.height.small)
+pdf(file.path(panel.path, "s9F.pdf"), width=embed.height.small*length(unique(df$sample)), height=embed.height.small)
 ggplot(df , aes(Mic.13, Ast.10, group="1")) + 
   geom_point(size=.25, color="grey") + 
   geom_smooth(method="lm", color="black") + 
@@ -578,14 +544,6 @@ ggplot(df , aes(Mic.13, Ast.10, group="1")) +
   theme_classic() + 
   theme(strip.background = element_blank())
 while (!is.null(dev.list()))  dev.off()
-
-# statistics to add to plot
-print(lapply(sort(unique(df$sample)), function(sample) {
-  t <- cor.test(df[df$sample == sample,"Mic.13"], df[df$sample == sample,"Ast.10"], alternative = "greater")
-  data.frame(sample=sample, cor=t$estimate, pval = t$p.value)
-}) %>% do.call(rbind, .) %>%
-  mutate(adj.pval = p.adjust(pval, method="BH"),
-         sig = cut(adj.pval, c(-.1, .0001, .001, .01, .05, Inf), c("****","***", "**", "*", ""))))
 
 
 
@@ -596,7 +554,7 @@ cols <- list(Ast.5=green2purple(5)[2], Ast.10=green2purple(5)[4])
 df <- readRDS("3. Other analyses/data/ST.validation.state.signatures.rds") %>%
   arrange(trajectory, sample) %>% mutate(sample=paste(trajectory, sample))
 
-pdf(file.path(path, "s9G.pdf"), width=embed.height.small*.8*length(unique(df$sample)), height=embed.height.small)
+pdf(file.path(panel.path, "s9G.pdf"), width=embed.height.small*.8*length(unique(df$sample)), height=embed.height.small)
 df %>% pivot_longer(cols = c("Ast.10","Ast.5"), names_to = "state") %>% 
   arrange(trajectory) %>%
   ggplot(., aes(state, value, fill=state)) + 
