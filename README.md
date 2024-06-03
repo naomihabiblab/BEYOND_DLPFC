@@ -62,11 +62,14 @@ qcs <- read.xlsx(SUPP$table.3, "Participant inclusion QCs") %>% filter(Final_QC 
 # This representation provides us a data structure into which we can load participant- (rows) and subpopulation (column) information
 data <- AnnData(
   X = proportions,
-  layers = list(sqrt.perv = sqrt(proportions)),
+  layers = list(sqrt.prev = sqrt(proportions)),
   obsm = list(
     QCs = qcs[rownames(proportions), ],
     meta.data = clinical.information[rownames(proportions), ])
 )
+
+# The following `cogdx_ad` is derived from the `cogdx` characterization and is used for subpopulation-endophenotype associations (while excluding MCI or AD with another cause of CI)
+data$obsm$meta.data$cogdx_ad = as.numeric(recode(data$obsm$meta.data$cogdx, "1"="1","2"="2", "3"=NA_character_, "4"="3", "5"=NA_character_,"6"=NA_character_))
 
 anndata::write_h5ad(data, "2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 rm(proportions, clinical.information, qcs)
