@@ -101,11 +101,20 @@ To load endophenotype associations and their meta-analysis (discovery and replic
 ```
 data <- anndata::read_h5ad("2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 
-associations <- read.xlsx(SUPP$table.3, "Endophenotype associations") %>% split(., .$cohort) %>% lapply(., \(df) df %>% select(-cohort))
 data$uns$trait.analysis <- list(
   snuc = associations$discovery, 
-  celmod = associations$replication,
-  meta.analysis = read.xlsx(SUPP$table.3, "Endophenotype meta-analysis"))
+  celmod = associations$replication)
+
+data$uns$trait.analysis$meta.analysis <- 
+  merge(py_to_r(data$uns$trait.analysis$snuc),
+              py_to_r(data$uns$trait.analysis$celmod),
+              by = c("trait","state"),
+              suffixes = c(".sc",".b"),
+              all.x = T) %>% 
+    merge(., py_to_r(data$uns$celmod$test.corrs) %>% `colnames<-`(paste0(colnames(.),".celmod")),
+          by.x = "state",
+          by.y = "row.names") %>% arrange(-corr.celmod) %>% 
+    merge(., read.xlsx(SUPP$table.3, "Endophenotype meta-analysis") %>% rename("state"="subpopulation") %>% select(-ends_with(".sc"), -ends_with(".b")), by=c("trait","state"))
 
 anndata::write_h5ad(data, "2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 rm(associations)
