@@ -74,7 +74,14 @@ df <- df %>% mutate(
 
 safe.remove("annotations")
 h5write(df, file, "annotations")
-rm(df)
+
+
+# Append neuronal subtype predicted annotations
+preds <- lapply(neurons, \(v) readRDS(gsub(".h5Seurat", ".predicted.annotation.rds", v$seurat.obj))["pruned.labels"] %>% as.matrix) %>% do.call(rbind, .)
+preds <- merge(df %>% select(cell, subset, grouping.by), preds %>% select(pruned.labels), by.x="cell", by.y=0) %>%
+  rename(allen.labels = pruned.labels)
+h5write(preds, file, "neuronal/allen.annotations")
+rm(preds, df)
 
 
 #####################################################################################################################
