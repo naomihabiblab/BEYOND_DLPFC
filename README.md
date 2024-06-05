@@ -139,6 +139,12 @@ data$obsm$X_core_phate <- read.xlsx(SUPP$table.5, "2D Landscape embedding") %>%
   column_to_rownames("individualID") %>% 
   select(-cluster) %>% `[`(rownames(data), )
 
+# Compute embedding local density for smoothened landscape plots
+source("4. BEYOND/utils/utils.R")
+data$obsp <- list()
+for(e in c("X_all_3d_phate","X_core_phate")) 
+  data$obsp[[paste0("similarity_", e)]] <- embedding.similarity(data$obsm[[e]], knn = 5)
+
 anndata::write_h5ad(data, "2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 ```
 
