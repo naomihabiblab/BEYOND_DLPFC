@@ -531,8 +531,8 @@ SaveH5Seurat(obj, "excitatory/data/cux2-.h5Seurat", overwrite = T, verbose = F)
 # ----------------------------------------------------------- #
 # DEGs and PA over all excitatory neurons                     #
 # ----------------------------------------------------------- #
-obj <- list(`cux2-`=LoadProject("excitatory", "cux2-", assays=list(SCT=c("counts")), graphs=F, misc=F, neighbors=F, reductions=F, verbose=F),
-            `cux2+`=LoadProject("excitatory", "cux2+", assays=list(SCT=c("counts")), graphs=F, misc=F, neighbors=F, reductions=F, verbose=F))
+obj <- list(`cux2-`=LoadH5Seurat("excitatory/data/cux2-.h5Seurat", assays=list(SCT=c("counts")), graphs=F, misc=F, neighbors=F, reductions=F, verbose=F),
+            `cux2+`=LoadH5Seurat("excitatory/data/cux2+.h5Seurat", assays=list(SCT=c("counts")), graphs=F, misc=F, neighbors=F, reductions=F, verbose=F))
 
 for (ident in unique(obj[[1]]$state)) {
   pb <- progress_bar$new(format=paste("DEGs for", ident, " :current/:total [:bar] :percent in :elapsed. ETA :eta"),
@@ -577,4 +577,54 @@ saveRDS(EnrichmentAnalysis(readRDS("excitatory/data/de.rds") %>%
                            universe = GeneIdMapping()$ids[universe]),
         "excitatory/data/pa.rds")
 rm(universe)
+
+
+####################################################################################################################
+##                                  #  Create Unified Excitatory Neurons UMAP   #                                 ##
+####################################################################################################################
+# Required RAM: 120GB
+obj <- list(`cux2-`=LoadH5Seurat("excitatory/data/cux2-.h5Seurat", assays=list(RNA=c("counts")), graphs=F, misc=F, neighbors=F, reductions=F),
+            `cux2+`=LoadH5Seurat("excitatory/data/cux2+.h5Seurat", assays=list(RNA=c("counts")), graphs=F, misc=F, neighbors=F, reductions=F))
+
+obj <- unname(lapply(names(obj), function(n) subset(obj[[n]], cells = sample(colnames(obj[[n]]), size = 175000))  ))
+obj <- merge(obj[[1]], obj[[2]])
+
+obj <- SCTransform(obj, variable.features.n = 4000, conserve.memory = T, verbose = F)
+obj <- RunPCA(obj, features=VariableFeatures(obj), npcs = 50, verbose = F)
+obj <- FindNeighbors(obj, dims = 1:50, verbose = F)
+obj <- RunUMAP(obj, dims=1:50, n.components = 2, n.neighbors = 100, return.model = T, verbose = F)
+SaveH5Seurat(obj, "excitatory/data/unified.umap.h5Seurat", overwrite = T, verbose = F)
+
+pdf("excitatory/graphs/merged.reference.umap.pdf", width=10, height=10)
+print(DimPlot(obj, group.by="state", label=T) + NoAxes())
+while (!is.null(dev.list()))  dev.off()
+
+
+# ----------------------------------------------------------- #
+# Project remainder of cells onto UMAP space                  #
+# ----------------------------------------------------------- #
+# Required RAM: 120GB
+reference <- LoadH5Seurat("excitatory/data/unified.umap.h5Seurat", assays=list(SCT=c("data")))
+message("Loaded reference UMAP object and model. Containing ", ncol(reference), " nuclei")
+ref.pca.features <- rownames(reference[["pca"]]@feature.loadings)
+
+embedding <- lapply(c("cux2-","cux2+"), function(name) {
+  o <- LoadH5Seurat(paste0("excitatory/data/cux2-", name, ".h5Seurat"), assays=list(RNA=c("counts")), graphs=F, misc=F, reductions=F)
+  print(o)
+  
+  features <- intersect(ref.pca.features, rownames(o))
+  o <- SCTransform(o, residual.features = features,  verbose = F)
+  o.pca.embeddings <- t(GetAssayData(o[["SCT"]], slot = "scale.data")[features,]) %*% reference[["pca"]]@feature.loadings[features,]
+  o[["pca"]] <- CreateDimReducObject(embeddings = o.pca.embeddings, key = "PC_", assay = "SCT"  )
+  
+  
+  o <- ProjectUMAP(query = o, query.reduction = "pca",
+                   reference = reference, reference.reduction = "pca",
+                   reduction.model = "umap", verbose=F)
+  
+  df <- data.frame(cell=colnames(o), group=name, state=o$state, Embeddings(o, "ref.umap"))
+  rm(o); gc(); return(df)
+})
+saveRDS(do.call(rbind, embedding), "excitatory/data/unified.umap.embeddings.rds")
+
 
