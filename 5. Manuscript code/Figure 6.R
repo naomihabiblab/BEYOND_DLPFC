@@ -111,7 +111,6 @@ while (!is.null(dev.list()))  dev.off()
 
 # Retrieve state order to be used in composite adjacency matrix - Fig 5c
 state.order <- do.call(rbind, lapply(hm.comms, function(hm) data.frame(comm = hm@name, state=rownames(hm@matrix)[row_order(hm)])))
-
 rm(dynamics, hm.comms, df, traits, hm.traits, pseudotime)
 
 
@@ -119,41 +118,36 @@ rm(dynamics, hm.comms, df, traits, hm.traits, pseudotime)
 dyn.adjacency <- dyn.adjacency[state.order$state, state.order$state]
 corr <- corr[state.order$state, state.order$state]
 
-mtx                 <- dyn.adjacency
-mtx[upper.tri(mtx)] <- 10 + corr[upper.tri(corr)]
+marks <- sapply(mark.states, function(s) which(rownames(dyn.adjacency) == s))
+matrices <- list(dyn.adjacency, corr)
+colors   <- list(circlize::colorRamp2(seq(0,1,length.out=21), colorRampPalette(c("white","salmon","red","firebrick4"))(21)),
+                 circlize::colorRamp2(seq(-1,1,length.out=21), green2purple.less.white(21)))
 
-breaks   <- list(seq(0,1,length.out=21), 10 + seq(-1,1,length.out=21))
-cols     <- list(colorRampPalette(c("white","salmon","red","firebrick4"))(21), green2purple.less.white(21))
-cols.fun <- circlize::colorRamp2(unlist(breaks), unlist(cols))
-
-
-marks <- sapply(mark.states, function(s) which(rownames(mtx) == s))
-
-hm <- Heatmap(
-  mtx,
-  row_split = state.order$comm,
-  column_split = state.order$comm,
-  cluster_rows = F, 
-  cluster_columns = F,
-  col = cols.fun,
-  cell_fun = function(j, i, x, y, w, h, col) {
-    if(i==j) grid.rect(x,y,w,h, gp = gpar(fill="black", col=NA))
-  },
-  column_title = NULL,
-  row_title = NULL,
-  show_heatmap_legend = F,
-  show_row_names = F, 
-  show_column_names = F,
-  row_gap = unit(2, "pt"),
-  column_gap = unit(2, "pt"),
-  right_annotation = rowAnnotation(states = anno_mark(marks, names(marks)))
-)
-
-pdf(file.path(panel.path, "6B.2.pdf"), width=embed.width*2, height=embed.height*2)
-draw(hm)
+pdf(file.path(path, "6B.2.pdf"), width=embed.width*2, height=embed.height*2)
+for (i in 1:2) {
+  Heatmap(
+    matrices[[i]],
+    row_split = state.order$comm,
+    column_split = state.order$comm,
+    cluster_rows = F, 
+    cluster_columns = F,
+    col = colors[[i]],
+    cell_fun = function(j, i, x, y, w, h, col) {
+      if(i==j) grid.rect(x,y,w,h, gp = gpar(fill="black", col=NA))
+    },
+    column_title = NULL,
+    row_title = NULL,
+    show_heatmap_legend = F,
+    show_row_names = F, 
+    show_column_names = F,
+    row_gap = unit(2, "pt"),
+    column_gap = unit(2, "pt"),
+    right_annotation = rowAnnotation(states = anno_mark(marks, names(marks)))
+  ) %>% draw()
+}
 while (!is.null(dev.list()))  dev.off()
+rm(dyn.adjacency, corr, breaks, marks, mark.states, state.order, communities, membership, i, matrices, colors)
 
-rm(dyn.adjacency, corr, mtx, breaks, cols, cols.fun, marks, mark.states, hm, state.order, communities, membership)
 
 
 

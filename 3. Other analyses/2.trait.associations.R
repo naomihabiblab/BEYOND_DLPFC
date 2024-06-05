@@ -1,4 +1,4 @@
-source("2. Cell-type analysis/load.code.env.R")
+source("2. Cell-type analysis/utils/load.code.env.R")
 
 
 ####################################################################################################################
@@ -13,7 +13,7 @@ bulk <- py_to_r(data$uns$celmod$avg.predicted.prop$validation)
 
 source("1. Library preprocessing/utils/ROSMAP.metadata.R")
 bulk.metadata <- merge(load.metadata()[rownames(bulk),], 
-                       read.csv("3. Other analyses/data/ROSMAP.bulk.RIN.values.csv", row.names = 1), 
+                       read.csv("3. Other analyses/data/ROSMAP.bulk.RIN.values_08222023.csv", row.names = 1), 
                        by.x="row.names", by.y="row.names", all.x=TRUE)
 
 traits <- c("sqrt.amyloid", "sqrt.amyloid_mf","sqrt.tangles","sqrt.tangles_mf","cogng_demog_slope", "ceradsc","braaksc","cogdx_ad")

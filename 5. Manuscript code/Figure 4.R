@@ -12,94 +12,42 @@ validations <- readRDS("3. Other analyses/data/RNAscope.rds")
 #                                           Panel A - Mic12/13 pathways vs all                                      #
 # ----------------------------------------------------------------------------------------------------------------- #
 pathways <- h5read(aggregated.data, file.path(mapping[["microglia"]], "pa")) %>% 
-  filter(state %in% c("Mic.12","Mic.13") & Count > 2) 
+  filter(state %in% c("Mic.12","Mic.13") & Count > 2) %>% 
+  mutate(direction.n = if_else(direction == "upregulated", 1, -1),
+         signed.pval = -log10(p.adjust) * direction.n) %>% 
+  pivot_wider(id_cols = c("Description"), names_from = c(state, state), values_from = c(signed.pval, direction.n)) %>%
+  mutate(across(contains("direction.n"), ~replace_na(., 0)),
+         tot.direction = direction.n_Mic.12 + direction.n_Mic.13) %>%
+  arrange(tot.direction, signed.pval_Mic.12, signed.pval_Mic.13) %>%
+  column_to_rownames("Description")
 
-grouped.pathways <- pathways %>% 
-  group_by(ID, direction, Description) %>%
-  summarise(n = n(),
-            across(c(Count, GeneRatio,p.adjust), mean),
-            across(c(state, geneID, gene), paste, collapse="/"),
-            .groups = "drop") %>%
-  rowwise() %>%
-  mutate(rowname = ID, 
-         across(c(geneID, gene), function(x) strsplit(x, split="/") %>% unlist %>% unique %>% sort %>% paste(., collapse = "/"))) %>%
-  as.data.frame()
-
-grouped.pathways <- lapply(list(list("upregulated", .95), list("downregulated", .95)), function(p) {
-  .sub <- grouped.pathways %>% filter(direction == p[[1]]) %>% column_to_rownames("rowname")
-  clustered.pathways <- ClusterPathways(.sub,
-                                        adjacency.args = list(method="kappa"),
-                                        clustering.args = list(control =list(cutoff = p[[2]])),
-                                        rank.pathways.args = list(n.select = function(n) 3,
-                                                                  attributes = .sub %>% mutate(p.adjust = -p.adjust) %>% dplyr::select(p.adjust)))
-  merge(.sub %>% dplyr::select(-geneID),
-        clustered.pathways$ranks %>% dplyr::select(-Description),
-        by.x="row.names", by.y="row.names")
-}) %>% do.call(rbind, .)
-
-pathways <- grouped.pathways %>% tidyr::separate_rows(state, sep="/")
-
-
-annotated.pathways <- list(
-  upregulated = list(
-    `1` = c("negative regulation of cell migration and endothelial cell proliferation"),
-    `2` = c("negative regulation of response to oxidative stress"),
-    `3` = c("neutrophil degranulation"),
-    `5` = c("actin binding"),
-    `8` = c("foam cell differentiation and lipid catabolic process"),
-    `9` = c("lipid metabolic process"),
-    `10`= c("exploration behavior"),
-    `11`= c("epithelial cell development and differentiation"),
-    `12`= c("regulation of lipase activity")
-  ),
-  downregulated = list(
-    `3` = c("glial cell migration"),
-    `5` = c("synapse organization"),
-    `8` = c("positive regulation of protein polymerization"),
-    `9` = c("Platelet activation, signaling and aggregation")
-  ))
-
-cols <- list(upregulated = 2, downregulated = 1)
+annotate <- c("negative regulation of cell migration",
+              "negative regulation of response to oxidative stress",
+              "actin binding", "regulation of lipase activity",
+              "foam cell differentiation", "lipid catabolic process",
+              "lipid catabolic process", "exploration behavior",
+              "glial cell migration", "synapse organization",
+              "positive regulation of protein polymerization",
+              "Platelet activation, signaling and aggregation")
+annotate <- which(rownames(pathways) %in% annotate)
 
 pdf(file.path(panel.path, "4A.pdf"), width=embed.width*.7, height=embed.height*1.2)
-lapply(names(cols), function(dirc) {
-  # Prepare state~pathways data for plotting
-  df <- pathways %>% filter(direction == dirc) %>% 
-    dplyr::select("state","direction","Description","p.adjust","membership") %>%
-    reshape2::dcast(membership+direction+Description~state, value.var = "p.adjust")
-  
-  # Determine clustered pathways ordering in heatmap
-  ord <- df[,-(1:3)] %>% mutate_all(~replace(., is.na(.), 2)) %>% as.matrix %>% 
-    Heatmap(show_row_dend = F, show_column_dend = F, row_split = df$membership) %>% prepare()
-  row.ord <- row_order(ord)
-  
-  # Plot clustered heatmap with pathway annotations
-  row.splitting <- stack(row.ord) %>% arrange(values) %>% pull(ind)
-  
-  Heatmap(as.matrix(df[stack(row.ord)[[1]],c("Mic.12","Mic.13")]),
-          col = c(green2purple(2)[[cols[[dirc]]]],"white"),
-          row_split = row.splitting,
-          cluster_rows = F, cluster_columns = F, show_row_names = F,
-          row_title = NULL,
-          row_labels = df$Description,
-          row_names_side = "left",
-          border=T, row_gap = unit(0,"pt"),
-          na_col = "grey90",
-          right_annotation = rowAnnotation(path = anno_textbox(
-            align_to = row.splitting,
-            text = annotated.pathways[[dirc]],
-            background_gp = gpar(fill="grey95", col="grey80"),
-            max_width=unit(4, "cm"),
-            text_space = unit(8, "pt"),
-            gp = gpar(col="black", fontsize=5),
-            word_wrap=T,
-          )),
-          height = unit(6,"cm"),
-          width = unit(.8, "cm"))
-}) %>% Reduce(ComplexHeatmap::`%v%`, .) %>% draw(., merge_legend=T)
+Heatmap(pathways %>% select(contains("signed.pval")) %>% as.matrix, 
+        col = green2purple.less.white(21),
+        cluster_rows = F, 
+        cluster_columns = F,
+        show_row_names = F,
+        row_split = pathways$tot.direction,
+        column_labels = c("Mic.12", "Mic.13"),
+        row_title = " ",
+        right_annotation = rowAnnotation(text=anno_mark(at=annotate, labels=rownames(pathways)[annotate])),
+        border=T, 
+        row_gap = unit(0,"pt"),
+        na_col = "grey90",
+        height = unit(6,"cm"),
+        width = unit(.8, "cm"))
 while (!is.null(dev.list()))  dev.off()
-
-rm(pathways, grouped.pathways, annotated.pathways, cols)
+rm(pathways, annotate)
 
 
 
@@ -109,58 +57,32 @@ rm(pathways, grouped.pathways, annotated.pathways, cols)
 pathways <- h5read(aggregated.data, file.path(mapping[["microglia"]], "pa.pairwise")) %>% 
   filter(comparison %in% c("Mic.12 vs. Mic.13","Mic.13 vs. Mic.12")) %>%
   dplyr::rename(state=comparison) %>%
-  mutate(direction = ifelse(state == "Mic.13 vs. Mic.12", 1, -1), rowname=ID) %>%
+  mutate(direction = ifelse(state == "Mic.13 vs. Mic.12", 1, -1), rowname=Description,
+         signed.pval = -log10(p.adjust)*direction) %>%
+  arrange(signed.pval) %>%
   column_to_rownames("rowname")
 
-clustered.pathways <- ClusterPathways(pathways,
-                                      adjacency.args = list(method="kappa"),
-                                      clustering.args = list(control =list(cutoff = .9)),
-                                      rank.pathways.args = list(n.select = function(n) 3,
-                                                                attributes = pathways %>% mutate(p.adjust = -p.adjust) %>% dplyr::select(p.adjust)))
-df <- merge(pathways %>% dplyr::select(-geneID),
-            clustered.pathways$ranks %>% dplyr::select(-Description),
-            by.x="row.names", by.y="row.names") %>%
-  dplyr::select("state","direction","Description","p.adjust","membership") %>%
-  mutate(val = -log10(p.adjust) * direction)
-reshape2::dcast(membership+Description~state, value.var = "val") 
 
-ord <- df %>% dplyr::select(val) %>% mutate_all(~replace(., is.na(.), 2)) %>% as.matrix %>% 
-  Heatmap(show_row_dend = F, show_column_dend = F, row_split = df$membership) %>% prepare()
-row.ord <- row_order(ord)
+annotate = c("MHC class II protein complex", "negative regulation of leukocyte apoptotic process",
+             "Antigen processing and presentation", "axonogenesis",
+             "extracellular matrix organization", "cell junction assembly", "lamellipodium assembly",
+             "lamellipodium assembly and organization", "negative regulation of immune system process",
+             "negative regulation of locomotion", "immunological synapse")
+annotate <- which(rownames(pathways) %in% annotate)
 
-
-annotated.pathways = list(
-  `1` = c("MHC class II protein complex"),
-  `2` = c("negative regulation of leukocyte apoptotic process"),
-  `3` = c("extracellular matrix organization"),
-  `4` = c("cell junction assembly"),
-  `5` = c("lamellipodium assembly and organization", "negative regulation of immune system process"),
-  `6` = c("negative regulation of locomotion"),
-  `7` = c("immunological synapse")
-)
-
-row.splitting <- stack(row.ord) %>% arrange(values) %>% pull(ind)
 pdf(file.path(panel.path, "4B.pdf"), width=embed.width*.7, height=embed.height*1.2)
-Heatmap(df$val,
+Heatmap(pathways %>% select(signed.pval) %>% as.matrix, 
         col = green2purple(21),
-        row_split = row.splitting,
-        cluster_rows = F, cluster_columns = F, show_row_names = F,
-        row_title = NULL,
-        border=T, row_gap = unit(0,"pt"),
-        right_annotation = rowAnnotation(path = anno_textbox(
-          align_to = row.splitting,
-          text = annotated.pathways,
-          background_gp = gpar(fill="grey95", col="grey80"),
-          max_width=unit(4, "cm"),
-          text_space = unit(8, "pt"),
-          gp = gpar(col="black", fontsize=8),
-          word_wrap=T,
-        )),
-        na_col = "grey90",
+        cluster_rows = F, show_row_names = F, show_column_names = F,
+        row_title = " ",
+        right_annotation = rowAnnotation(text=anno_mark(at=annotate, labels=rownames(pathways)[annotate])),
+        row_split = pathways$direction,
+        border=T,
+        row_gap = unit(0,"pt"),
         height = unit(6,"cm"),
-        width = unit(.8, "cm"))
+        width = unit(.4, "cm"))
 while (!is.null(dev.list()))  dev.off()
-
+rm(annotate, pathways)
 
 
 
@@ -170,7 +92,7 @@ while (!is.null(dev.list()))  dev.off()
 
 genes = list(`Mic.12 genes` = c("CD163","HLA-DRA","FOXP1","PELI1","PELI2"),
              `Both`         = c("MSR1","PRKCE"),
-             `Mic.13 genes` = c("PPARG","SPP1","TGFBR1","SMAD3","SCIN","WIPF3"),
+             `Mic.13 genes` = c("PTPRG","PPARG","SPP1","TGFBR1","SMAD3","SCIN","WIPF3"),
              `AD risk genes`= c("ADAM10","TREM2","APOE","GPNMB"))
 
 exp <- h5read(aggregated.data, "glia/microglia/gene.exp") %>% filter(gene %in% unlist(genes))
@@ -401,7 +323,7 @@ rm(controls)
 # ----------------------------------------------------------------------------------------------------------------- #
 genes = list(`Mic.12 genes` = c("CD163","HLA-DRA","FOXP1","PELI1","PELI2"),
              `Both`         = c("MSR1","PRKCE"),
-             `Mic.13 genes` = c("PPARG","SPP1","TGFBR1","SMAD3","SCIN","WIPF3"),
+             `Mic.13 genes` = c("PTPRG","PPARG","SPP1","TGFBR1","SMAD3","SCIN","WIPF3"),
              `AD risk genes`= c("ADAM10","TREM2","APOE","GPNMB"))
 hm <- h5read(aggregated.data, "glia/microglia/gene.exp") %>% 
   filter(gene %in% unlist(genes)) %>%

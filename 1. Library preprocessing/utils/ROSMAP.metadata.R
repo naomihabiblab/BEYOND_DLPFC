@@ -1,7 +1,7 @@
 library(dplyr)
 
 
-load.metadata <- function(path = "1. Library preprocessing/data/ROSMAP.participants.metadata.csv") {
+load.metadata <- function(path = "1. Library preprocessing/data/ROSMAP.participants.metadata_04-25-2022.csv") {
   read.csv(path, header = T) %>%
     dplyr::mutate(
       projid = as.character(projid),
@@ -11,7 +11,7 @@ load.metadata <- function(path = "1. Library preprocessing/data/ROSMAP.participa
       cogdx = factor(cogdx, levels = 1:6),
       
       cogdx_ad = as.numeric(recode(cogdx, "1"="1","2"="2", "3"=NA_character_, "4"="3", "5"=NA_character_,"6"=NA_character_)),
-      cogdx_grouped = as.numeric(recode(cogdx, "3"="2", "4" = "3","5"="3", "6"=NA_character_)),
+      cogdx_grouped = as.numeric(recode(cogdx, "3"="2", "4" = "3","5"="3")),
       
       # Semi-quantitative pathology measures
       ceradsc = factor(ceradsc, levels = 4:1, ordered=T),
@@ -31,6 +31,7 @@ load.metadata <- function(path = "1. Library preprocessing/data/ROSMAP.participa
     dplyr::mutate(cerad.txt = factor(ceradsc, levels = 4:1, labels = c("No AD", "Possible", "Probable", "Definite")),
                   braak.txt = factor(braaksc, levels = 1:6, labels = c("I", "II", "III", "IV", "V", "VI")),
                   braak.grouped.txt = factor(braaksc, levels = 0:6, labels = c("0","I", "II", "III", "IV", "V+VI", "V+VI")),
+                  cogdx.grouped.txt = factor(cogdx, levels = c(1,2,3,4,5,6), labels = c("NCI", "MCI", "MCI+Other","AD","AD+Other","Other\nDementia")),
                   cdx.txt = factor(cogdx, levels=c(1,2,3,4,5,6), labels=c("No Cognitive\nImpairment", "Mild\nCognitive Impairment", 
                                                                           "Mild Cognitive\nImpairment\nand Another\nCause of CI", "AD", 
                                                                           "AD\nand Another\nCause of CI", "Other Dementia")),

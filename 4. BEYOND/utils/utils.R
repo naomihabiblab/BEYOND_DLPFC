@@ -13,7 +13,7 @@
 #' @param knn integer used to calculate the local density around each point - mean distance to the k nearest neighbors
 #' 
 #' @return matrix of shape (n_samples, n_samples) of pairwise similarities
-embedding.similatity <- function(embedding, knn = 5) {
+embedding.similarity <- function(embedding, knn = 5) {
   sim <- rdist::cdist(embedding, embedding)^2
   s <- apply(sim, 1, function(.) sqrt(mean(sort(.)[2:(knn+1)])))
   sim <- exp(-sim / outer(s, s))
@@ -69,18 +69,19 @@ fit.trajectories.palantir <- function(data, dm, dm.k, palantir.k, scale, root.cl
 }
 
 
-fit.trajectories.via <- function(data.path="2. Cell-type analysis/data/subpopulation.proportions.h5ad", knn, too.big, too.small, root.clusters, exclude.clusters=c()) {
+fit.trajectories.via <- function(data.path="2. Cell-type analysis/data/subpopulation.proportions.h5ad", 
+                                 knn, too.big, too.small, root.clusters, exclude.clusters=c()) {
   if(!"BEYOND.ViaEnv" %in% reticulate::conda_list()[,"name"]) {
     reticulate::conda_create("BEYOND.ViaEnv", python_version = "3.7", packages=c("pybind11"), pip=TRUE)
     reticulate::conda_install("BEYOND.ViaEnv", packages = "hnswlib")
     reticulate::conda_install("BEYOND.ViaEnv", packages="pyVIA", pip=TRUE)
   }
   
-  filename <- 'BEYOND/data/via.pickle'
+  filename <- '4. BEYOND/data/via.pickle'
   system(stringr::str_interp(
-    paste("~/r-miniconda/condabin/conda run -n BEYOND.ViaEnv python '4. BEYOND/utils/run.via.trajectories.py'",
-          "--data_file ${data.path}",
-          "--output_path ${filename}",
+    paste("${reticulate::conda_binary()} run -n BEYOND.ViaEnv python '4. BEYOND/utils/run.via.trajectories.py'",
+          "--data_file '${data.path}'",
+          "--output_path '${filename}'",
           "--k ${as.integer(knn)}",
           "--big ${paste(too.big, collapse=' ')}",
           "--small ${paste(as.integer(too.small), collapse=' ')}",

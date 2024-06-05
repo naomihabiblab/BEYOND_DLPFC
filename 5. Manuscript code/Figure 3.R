@@ -99,8 +99,8 @@ while (!is.null(dev.list()))  dev.off()
 #                                       Panel B - snRNAseq/bulk tstat comparison                                   #
 # ----------------------------------------------------------------------------------------------------------------- #
 
-pdf(file.path(panel.path, "s6B.pdf"), width=embed.width.small, height=embed.height.small*3)
-for(traits in list(AD.traits, AD.traits.cat)) {
+pdf(file.path(panel.path, "s6B.pdf"), width=embed.width, height=embed.height.small*3)
+traits = c(AD.traits, AD.traits.cat)
   df <- py_to_r(data$uns$trait.analysis$meta.analysis) %>% 
     filter(trait %in% names(traits)) %>%
     group_by(trait) %>% 
@@ -137,9 +137,8 @@ for(traits in list(AD.traits, AD.traits.cat)) {
       scale_y_continuous(limits = c(range.min, range.max), expand = expansion(mult = .025)) + 
       labs(x="t-stat snRNA-seq", y="t-stat bulk pred.", title=traits[[t]])
   }),
-  ncol=1) %>% print()
-  rm(df, corrs)
-}
+  nrow=3) %>% print()
+rm(df, corrs, traits)
 while (!is.null(dev.list()))  dev.off()
 
 

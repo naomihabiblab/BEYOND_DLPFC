@@ -1,37 +1,44 @@
 source("5. Manuscript code/utils.R")
+source("1. Library preprocessing/utils/ROSMAP.metadata.R")
 
+# Loading list of snRNA-seq participants, while correcting mistakes in tracker file
+participants <- openxlsx::read.xlsx("5. Manuscript code/data/ROSMAP 10X Processing Tracker.xlsx", sheet = "Processed Batches") %>%
+  filter(!Batch %in% c("B1", "B2", "B3") & (!StudyCode %in% c("MAP83034844", "MAP74718818"))) %>%
+  mutate(StudyCode = as.character(as.numeric(gsub("ROS|MAP", "", StudyCode)))) %>% 
+  select(StudyCode, Batch) %>%
+  rbind(data.frame(StudyCode="44299049", Batch=55))
+
+
+# The following loads ROSMAP participants' demographic- and endophenotypic characterization 
+# Parts of these data are available in supplementary table 1
+cohort <- load.metadata() %>% `[`(unique(participants$StudyCode), )
 
 #####################################################################################################################
 #                                          Figure 1 - Cohort & Atlas Overview                                       #
 #####################################################################################################################
-
-donors <- openxlsx::read.xlsx("5. Manuscript code/data/ROSMAP 10X Processing  Tracker.xlsx", sheet = "Processed Batches") %>%
-  filter(!Batch %in% c("B1", "B2", "B3") & StudyCode != "MAP83034844") %>%
-  pull(StudyCode) %>% unique %>% gsub("ROS|MAP", "", .) %>% as.numeric %>% as.character()
-cohort <- load.metadata() %>% `[`(donors,)
-
 
 # ----------------------------------------------------------------------------------------------------------------- #
 #                                 Panel B - Categorical Pathology & Cognitive Decline                               #
 # ----------------------------------------------------------------------------------------------------------------- #
 
 p1 <- ggplot(cohort, aes(sex, age_death)) + 
-  geom_jitter(alpha=.2, width = .15) +
-  geom_boxplot(alpha=.2, fill="black", outlier.size = 0) + 
+  geom_jitter(alpha=.4, width = .15) +
+  geom_boxplot(alpha=.5, fill="darkorchid4", outlier.size = 0) + 
   stat_summary(geom = "text", fun.data = function(x) list(y=65, label=paste0("n=", length(x))))  +
-  labs(x=NULL, y=NULL, title="Age of death") + 
+  labs(x=NULL, y="Age of death", title=NULL) + 
   scale_y_continuous(breaks = c(70, 90, 110)) + 
   theme_classic()
 
-pdf(file.path(path, "1B.pdf"), width=embed.width, height=embed.height*2)
-plot_grid(p1, plot_grid(plotlist = lapply(c("cogdx","braaksc","ceradsc"), function(t)
-  ggplot(cohort, aes_string(t)) + 
-    geom_bar(alpha=.2, color="black") + 
+pdf(file.path(panel.path, "1B.pdf"), width=embed.width, height=embed.height*2)
+plot_grid(p1, plot_grid(plotlist = lapply(c("cogdx.grouped.txt","braak.grouped.txt","cerad.txt"), function(t)
+  ggplot(cohort, aes(!!sym(t), fill=!!sym(t))) + 
+    geom_bar(color="black") + 
     theme_classic() + 
+    scale_fill_manual(values = colorRampPalette(c("white","darkorchid4"))(1+length(unique(cohort[,t])))[-1]) + 
     scale_y_continuous(expand = c(0,0), 
                        limits = c(0, 170), 
                        breaks = c(50,100, 150)) + 
-    labs(x=NULL, y=NULL, title=t)), 
+    labs(x=NULL, y=t, title=NULL)), 
   ncol=1),
   rel_heights = c(1,3), ncol = 1)
 while (!is.null(dev.list()))  dev.off()
@@ -57,7 +64,7 @@ C <- as.matrix(df[!is.na(df$cogng_demog_slope),"cogng_demog_slope"])
 grid$cogng_demog_slope <- exp(-dist/(.75*dens)) %*% C
   
 
-pdf(file.path(path, "1C.pdf"), width=embed.width, height=embed.height+1)
+pdf(file.path(panel.path, "1C.pdf"), width=embed.width, height=embed.height+1)
 ggplot(df %>% arrange(!is.na(cogng_demog_slope),cogng_demog_slope), aes(x,y, color=cogng_demog_slope, shape=sex)) + 
   ggrastr::geom_tile_rast(aes(x,y,fill=cogng_demog_slope), grid, inherit.aes = F, alpha=.8, color=NA, raster.dpi = 10) + 
   geom_point(size=3.5, color="black", alpha=.4) +
@@ -84,7 +91,7 @@ embedding <- data.frame(embedding[shared,], annotations[shared, ])
 
 
 # Plot UMAP embedding of atlas
-pdf(file.path(path, "1D.pdf"), width=8, height=8)
+pdf(file.path(panel.path, "1D.pdf"), width=8, height=8)
 ggplot(embedding, aes(x,y, color=state)) +
   ggrastr::geom_point_rast(size=.05, raster.dpi = 600) + 
   scale_color_manual(values = joint.state.colors, na.value = "lightgrey") +
@@ -108,7 +115,7 @@ df <- annotations %>% filter(projid != "NA" & grouping.by != "Immune") %>%
 
 cols <- cell.group.color %>% `names<-`(recode(names(.), "Excitatory Neurons"="Exc. Neurons", "Inhibitory Neurons"="Inh. Neurons", "Oligodendrocytes"="Oligodend."))
 
-pdf(file.path(path, "1E.pdf"), width=embed.width*2/3, height=embed.height)
+pdf(file.path(panel.path, "1E.pdf"), width=embed.width*2/3, height=embed.height)
 ggplot(df, aes(grouping.by, n, fill=grouping.by, color=grouping.by)) + 
   geom_boxplot(alpha=.3, outlier.shape = NA) +
   geom_point(alpha=.5, position = position_jitterdodge(jitter.width = 2.5, dodge.width = .7, jitter.height = 0)) + 
@@ -140,7 +147,7 @@ df <- df %>% rownames_to_column("projid") %>%
          projid = factor(projid, levels = rownames(df)[tree$order], ordered = T))
 
 
-pdf(file.path(path, "1F.pdf"), width=embed.width*2/3, height=embed.height)
+pdf(file.path(panel.path, "1F.pdf"), width=embed.width*2/3, height=embed.height)
 bars <- ggplot(df, aes(projid,value,fill=state)) + 
   geom_bar(stat = "identity") + 
   scale_fill_manual(values=joint.state.colors) + 
@@ -177,24 +184,14 @@ cols <- list(
 # ----------------------------------------------------------------------------------------------------------------- #
 #                                         Panel A - batch trait distributions                                       #
 # ----------------------------------------------------------------------------------------------------------------- #
-df <- annotations %>% dplyr::select(projid, batch) %>% unique %>%
-  merge(., read.csv("1. Library preprocessing/data/snrnaseq_sample_selection_20210817.csv", header = T) %>%
-          mutate(projid = as.character(projid),
-                 sex = factor(plyr::mapvalues(msex, c(F,T), c("Female", "Male"))),
-                 cogdx = factor(recode(cogdx, "1"="NCI", "2"="MCI", "3"="MCI", "4"="AD", "5"="AD", "6"="Other\nDementia", .default = as.character(cogdx))),
-                 ceradsc = factor(ceradsc, levels = 4:1, ordered=T),
-                 braaksc = factor(recode(braaksc, `1`="I+II", `2`="I+II", `3`="III", `4`="IV", `5`="V+VI", `6`="V+VI", .default = "NA"), levels=c("I+II","III","IV","V+VI","NA"), ordered = T)) %>%
-          dplyr::select(projid, sex, cogdx, braaksc, ceradsc, pmi)) %>% 
-  filter(!grepl("^MAP", batch)) %>%
-  mutate(batch = as.numeric(gsub(".*-B", "", gsub("-[B|A]$", "", batch)))) %>% 
-  mutate(batch = factor(batch, levels = unique(sort(batch)))) %>%
-  unique
+df <- cohort %>% select(sex, cogdx, cerad.txt, braak.grouped.txt) %>%
+  merge(participants, by.x="row.names", by.y="StudyCode") %>%
+  mutate(Batch = as.numeric(gsub("B", "", Batch))) %>%
+  mutate(Batch = factor(Batch, levels = unique(sort(Batch))))
   
-
-
-pdf(file.path(path, "s1A.pdf"), width=embed.width*1.5, height=embed.height*1.5)
-lapply(c("sex","cogdx","braaksc","ceradsc"), function(p) {
-  ggplot(df, aes_string("batch", fill=p)) + 
+pdf(file.path(panel.path, "s1A.pdf"), width=embed.width*1.5, height=embed.height*1.5)
+lapply(c("sex","cogdx","braak.grouped.txt","cerad.txt"), function(p) {
+  ggplot(df, aes_string("Batch", fill=p)) + 
     geom_bar(stat = "count") + 
     scale_x_discrete(expand = c(0,0)) +
     scale_y_continuous(expand = c(0,0), breaks = c(2,4,6,8)) + 

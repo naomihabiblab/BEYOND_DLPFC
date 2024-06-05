@@ -1,4 +1,4 @@
-source("2. Cell-type analysis/load.code.env.R")
+source("2. Cell-type analysis/utils/load.code.env.R")
 source("4. BEYOND/utils/utils.R")
 
 
@@ -21,7 +21,7 @@ data$uns$trajectories$palantir$branch.probs$columns <- c("prAD", "ABA")
 data$uns$trajectories$palantir$terminals$index <- c("prAD", "ABA")
 
 # Run VIA algorithm
-data$uns$trajectories$via <- fit.trajectories.via(data.path = "Cell-type analysis/data/subpopulation.proportions.h5ad", knn=20, 
+data$uns$trajectories$via <- fit.trajectories.via(data.path = "2. Cell-type analysis/data/subpopulation.proportions.h5ad", knn=20, 
                                                   too.big = c(.2, .075), too.small=5,
                                                   root.clusters = c("3","4"))
 data$uns$trajectories$via$branch.probs$columns <- 

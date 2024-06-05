@@ -1,5 +1,5 @@
 source("2. Cell-type analysis/load.code.env.R")
-
+source("4. BEYOND/utils/utils.R")
 
 ####################################################################################################################
 ##                                #  Creating cellular landscape representation #                                 ##
@@ -47,6 +47,6 @@ rm(sub)
 # Local similarities of participants based on cellular environments
 data$obsp <- list()
 for(e in c("X_all_3d_phate","X_core_phate","X_umap","X_tsne")) 
-  data$obsp[[paste0("similarity_", e)]] <- embedding.similatity(data$obsm[[e]], knn = 5)
+  data$obsp[[paste0("similarity_", e)]] <- embedding.similarity(data$obsm[[e]], knn = 5)
 anndata::write_h5ad(data, "2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 rm(e, sc)

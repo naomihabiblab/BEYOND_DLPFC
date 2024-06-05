@@ -17,6 +17,7 @@ add.header.style <- function(wb, sheet, ncols) {
 data <- anndata::read_h5ad("2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 core.donors <- as.character(data$obs_names)
 
+# Loading list of snRNA-seq participants, while correcting mistakes in tracker file
 snuc.donors <- openxlsx::read.xlsx("5. Manuscript code/data/ROSMAP 10X Processing Tracker.xlsx", sheet = "Processed Batches") %>%
   filter(!Batch %in% c("B1", "B2", "B3") & (!StudyCode %in% c("MAP83034844", "MAP74718818"))) %>%
   pull(StudyCode) %>% unique %>% gsub("ROS|MAP", "", .) %>% as.numeric %>% as.character
@@ -34,7 +35,7 @@ data$obs_names <- as.character(donor.mapping[data$obs_names])
 ##                            #  Supplementary Table 1 - Clinicopathological Characteristics  #                   ##
 ####################################################################################################################
 
-wb <- createWorkbook(creator = creator, title = "Participants clinicopathological characteristics")
+wb <- createWorkbook(creator = creator, title = "Participants Clinicopathological Characteristics")
 addWorksheet(wb, "Description", gridLines = TRUE)
 
 # -------------------------------------------------------- #
@@ -101,7 +102,7 @@ format.sheet <- function(wb, sheet, df, sets, horizontal.border.after=NULL) {
 }
 
 
-wb <- createWorkbook(creator = creator, title = "Atlas characterization")
+wb <- createWorkbook(creator = creator, title = "Atlas Characterization")
 addWorksheet(wb, "Description", gridLines = TRUE)
 
 # -------------------------------------------------------- #
@@ -189,7 +190,7 @@ rm(df, wb, format.sheet)
 ####################################################################################################################
 ##                            #  Supplementary Table 3 - Endophenotype associations  #                            ##
 ####################################################################################################################
-wb <- createWorkbook(creator = creator, title = "Endophenotypes Associations")
+wb <- createWorkbook(creator = creator, title = "Endophenotype Associations")
 addWorksheet(wb, "Description", gridLines = TRUE)
 
 

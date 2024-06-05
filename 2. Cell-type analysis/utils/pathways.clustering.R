@@ -1,4 +1,4 @@
-source("Cell-type analysis/utils/pathways.analysis.R")
+source("2. Cell-type analysis/utils/pathways.analysis.R")
 
 PathwayGenes <- function(pathways = NULL, organism = c("hsa", "mmu"), funs = c("KEGG","Pathway","GO:BP","GO:MF","GO:CC")) {
   require(dplyr)
