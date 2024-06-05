@@ -62,11 +62,14 @@ qcs <- read.xlsx(SUPP$table.3, "Participant inclusion QCs") %>% filter(Final_QC 
 # This representation provides us a data structure into which we can load participant- (rows) and subpopulation (column) information
 data <- AnnData(
   X = proportions,
-  layers = list(sqrt.perv = sqrt(proportions)),
+  layers = list(sqrt.prev = sqrt(proportions)),
   obsm = list(
     QCs = qcs[rownames(proportions), ],
     meta.data = clinical.information[rownames(proportions), ])
 )
+
+# The following `cogdx_ad` is derived from the `cogdx` characterization and is used for subpopulation-endophenotype associations (while excluding MCI or AD with another cause of CI)
+data$obsm$meta.data$cogdx_ad = as.numeric(recode(data$obsm$meta.data$cogdx, "1"="1","2"="2", "3"=NA_character_, "4"="3", "5"=NA_character_,"6"=NA_character_))
 
 anndata::write_h5ad(data, "2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 rm(proportions, clinical.information, qcs)
@@ -98,11 +101,20 @@ To load endophenotype associations and their meta-analysis (discovery and replic
 ```
 data <- anndata::read_h5ad("2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 
-associations <- read.xlsx(SUPP$table.3, "Endophenotype associations") %>% split(., .$cohort) %>% lapply(., \(df) df %>% select(-cohort))
 data$uns$trait.analysis <- list(
   snuc = associations$discovery, 
-  celmod = associations$replication,
-  meta.analysis = read.xlsx(SUPP$table.3, "Endophenotype meta-analysis"))
+  celmod = associations$replication)
+
+data$uns$trait.analysis$meta.analysis <- 
+  merge(py_to_r(data$uns$trait.analysis$snuc),
+              py_to_r(data$uns$trait.analysis$celmod),
+              by = c("trait","state"),
+              suffixes = c(".sc",".b"),
+              all.x = T) %>% 
+    merge(., py_to_r(data$uns$celmod$test.corrs) %>% `colnames<-`(paste0(colnames(.),".celmod")),
+          by.x = "state",
+          by.y = "row.names") %>% arrange(-corr.celmod) %>% 
+    merge(., read.xlsx(SUPP$table.3, "Endophenotype meta-analysis") %>% rename("state"="subpopulation") %>% select(-ends_with(".sc"), -ends_with(".b")), by=c("trait","state"))
 
 anndata::write_h5ad(data, "2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 rm(associations)
@@ -126,6 +138,12 @@ data$obsm$X_all_3d_phate <- read.xlsx(SUPP$table.5, "3D Landscape embedding") %>
 data$obsm$X_core_phate <- read.xlsx(SUPP$table.5, "2D Landscape embedding") %>% 
   column_to_rownames("individualID") %>% 
   select(-cluster) %>% `[`(rownames(data), )
+
+# Compute embedding local density for smoothened landscape plots
+source("4. BEYOND/utils/utils.R")
+data$obsp <- list()
+for(e in c("X_all_3d_phate","X_core_phate")) 
+  data$obsp[[paste0("similarity_", e)]] <- embedding.similarity(data$obsm[[e]], knn = 5)
 
 anndata::write_h5ad(data, "2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 ```
