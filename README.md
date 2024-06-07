@@ -5,9 +5,9 @@ To reconstruct the dynamics of the brain's cellular environment along the progre
 </p>
 <p align="center"><img src="https://github.com/GreenGilad/BEYOND_DLPFC/assets/43610945/d5e52110-1bee-452d-bf8a-1c33e0ede755" width="75%"></p>
 
-<p align="justify">
-The following repository contains:
-  
+<details>
+<summary>Available infomration in repository</summary>
+<p align="justify"> 
 1. **Library preprocessing**: Library level snRNA-seq analysis. Removal of background RNA, quality control steps, cell-type classification and doublets annotation.
 2. **Cell-type analysis**: snRNA-seq analysis for each of the cell types. Creating our cell atlas. Removal of low quality cells and doublets, sub-clustering analysis, differential expression and pathway enrichment analyses.
 3. **Other analyses**: Celmod bulk RNA-seq deconvolution, trait associations and meta-analysis, causal modeling, RNAscope validations and pTau validations.
@@ -15,23 +15,18 @@ The following repository contains:
 5. **Manuscript code**: The complete code generating all figures, extended data figures and supplementary tables shown in the manuscript.
 
 The code within each folder runs under the assumption that the code of the previous folder was executed and generated the necessary data files. Please refer to the readme file of each folder for more details
+</details>
 
-
-## Data accessibility
-
+<details>
+<summary>Data accessibility</summary>
 All snRNA-seq data used in our study is accessible via [Synapse (syn53366818)](https://www.synapse.org/#!Synapse:syn53366818) and contains the raw reads, library count matrices and processed cell atlas in the format of cell-type Seurat objects. 
+</details>
 
-
-
----
-
+--- 
 ## Reproducibility and further analysis
 To facilitate further investigation into our cellular landscape and BEYOND methodology we provide the following tutorial in which we load the manuscript's supplementary tables and reproduce the different types of plots shown in our study. Clone this GitHub repository and follow the code below.
-
-
-### Subpopulation proportion matrix
-```
-# Clone this GitHub repository and specify the path to the following supplementary tables
+```R
+# Clone the current GitHub repository and specify the path to the following supplementary tables
 
 library(openxlsx)
 SUPP = list(
@@ -40,6 +35,8 @@ SUPP = list(
   table.5 = "Supplementary Tables/Supplementary Table 5 - BEYOND analysis results.xlsx")
 ```
 
+<details>
+<summary>Subpopulation proportion matrix </summary>
 The starting point for all post-atlas analyses is the participant-wise subpopulation proportions matrix. Computation of the subpopulation proportion matrix starts with the extraction of the participant-cell annotations from the Seurat objects and the calculation of the participant-wise proportions. This code can be found in the following files:
 
 -   *2.Cell-type analysis/2.aggregate.cell.type.data.R* lines 45-77.
@@ -47,7 +44,7 @@ The starting point for all post-atlas analyses is the participant-wise subpopula
 
 To recreate the subpopulation proportion matrix from the supplementary tables use the following:
 
-```
+```R
 # Create and load a conda environment with the necessary R and python packages
 source("2. Cell-type analysis/utils/load.code.env.R")
 library(anndata)
@@ -74,12 +71,13 @@ data$obsm$meta.data$cogdx_ad = as.numeric(recode(data$obsm$meta.data$cogdx, "1"=
 anndata::write_h5ad(data, "2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 rm(proportions, clinical.information, qcs)
 ```
+</details>
 
-### Endophenotype associations & meta-analysis
-
+<details>
+<summary>Endophenotype associations & meta-analysis</summary>
 The populated data-structure above is sufficient for re-running the Celmod fitting, snRNA-seq and bulk RNA-seq endophenotype associations, meta-analysis of associations, and the causal modeling (see *"3. Other analyses"* folder). To load Celmod results from the supplementary tables use the following:
 
-```
+```R
 data <- anndata::read_h5ad("2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 
 data$uns$celmod <- list()
@@ -98,7 +96,7 @@ anndata::write_h5ad(data, "2. Cell-type analysis/data/subpopulation.proportions.
 
 To load endophenotype associations and their meta-analysis (discovery and replication) from the supplementary tables use the following:
 
-```
+```R
 data <- anndata::read_h5ad("2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 
 data$uns$trait.analysis <- list(
@@ -119,12 +117,13 @@ data$uns$trait.analysis$meta.analysis <-
 anndata::write_h5ad(data, "2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 rm(associations)
 ```
+</details>
 
-### BEYOND - Cellular landscape embedding
-
+<details>
+<summary>BEYOND - Cellular landscape embedding</summary>
 Using the participant-wise subpopulation proportions as our representation we can now visualize the cellular landscape. The code for computing the used embeddings can be found in file *4. BEYOND/1.create.cellular.landscape.R*. To load embeddings from the supplementary tables use the following:
 
-```
+```R
 data <- anndata::read_h5ad("2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 
 data$obs$clusters <- read.xlsx(SUPP$table.5, "3D Landscape embedding") %>% 
@@ -147,12 +146,14 @@ for(e in c("X_all_3d_phate","X_core_phate"))
 
 anndata::write_h5ad(data, "2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 ```
+</details>
 
-### BEYOND - Cellular trajectories & dynamics
+<details>
+<summary>BEYOND - Cellular trajectories & dynamics</summary>
 
 To uncover trajectories in the cellular landscape we used two different trajectory inference tools: Palantir and VIA. The code for inferring the trajectories, as well as the parameters used in the manuscript can be found in file *4. BEYOND/2.trajectories.and.dynamics.in.landscape.R* lines 10-31. To load these trajectories from the supplementary tables use the following:
 
-```
+```R
 data <- anndata::read_h5ad("2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 
 palantir <- read.xlsx(SUPP$table.5, "Palantir Trajectories") %>% column_to_rownames("individualID") %>% `[`(rownames(data), )
@@ -182,7 +183,7 @@ rm(palantir, via)
 
 To load fitted endophenotype- and subpopulation dynamics from the supplementary tables use the following:
 
-```
+```R
 data <- anndata::read_h5ad("2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 
 data$uns$trajectories$palantir$dynamics = list(
@@ -199,12 +200,13 @@ data$uns$trajectories$palantir$dynamics = list(
 
 anndata::write_h5ad(data, "2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 ```
+</details>
 
-### BEYOND - Communities
-
+<details>
+<summary>BEYOND - Communities</summary>
 Subpopulations were partitioned into cellular communities using: (1) sub-population co-occurrences across individuals, and (2) similarities in their dynamics across both trajectories. The code for defining the communities, and computing their dynamics and endophenotype associations can be found in file *4. BEYOND/3.construct.cellular.communities.R*. To load these data from the supplementary tables use the following:
 
-```
+```R
 data <- anndata::read_h5ad("2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 
 # Append sub-population to community partition
@@ -236,16 +238,17 @@ data$uns$communities$trait.association <- read.xlsx(SUPP$table.5, "Community end
 anndata::write_h5ad(data, "2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 rm(data)
 ```
+</details>
 
-### Plotting manuscript figures
-
+<details>
+<summary>Plotting manuscript figures</summary>
 To plot the figures seen in the manuscript load the `anndata` object and use the different plotting util functions.
 
 -   The sourced utils file expects the *2. Cell-type analysis/data/DLPFC.Green.atlas.h5* file to be available. This file contains atlas-level information such as subpopulation differential expressed genes, pathways, UMAP coordinates and pseudo-bulk gene expression calculated for each of the different cell-type Seurat objects. To replicate this data structure from the Synapse available Seurat objects follow *2. Cell-type analysis/2.aggregate.cell.type.data.R*
 
 - Alternately, comment out atlas related plot settings in lines 125-196
 
-```
+```R
 source("5. Manuscript code/utils.R")
 data <- anndata::read_h5ad("2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 
@@ -296,6 +299,7 @@ landscape + dynamics + associations
 ```
 
 <kdb><img src="https://github.com/naomihabiblab/BEYOND_DLPFC/assets/43610945/028a2ea5-71b2-4705-949c-e0fd784b1937"/><kdb/>
+</details>
 
 ---
 
