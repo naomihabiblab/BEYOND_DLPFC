@@ -27,7 +27,7 @@ data$uns$trajectories$via <- fit.trajectories.via(data.path = "2. Cell-type anal
 data$uns$trajectories$via$branch.probs$columns <- 
   data$uns$trajectories$via$branch.probs.scaled$columns <-
   data$uns$trajectories$via$terminals$index <- 
-  c("ABA", "Trajectory.4", "prAD", "Trajectory.3")
+  c("Trajectory.3", "ABA.like", "prAD.like")
 anndata::write_h5ad(data, "2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 
 

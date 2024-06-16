@@ -77,9 +77,14 @@ h5write(df, file, "annotations")
 
 
 # Append neuronal subtype predicted annotations
-preds <- lapply(neurons, \(v) readRDS(gsub(".h5Seurat", ".predicted.annotation.rds", v$seurat.obj))["pruned.labels"] %>% as.matrix) %>% do.call(rbind, .)
-preds <- merge(df %>% select(cell, subset, grouping.by), preds %>% select(pruned.labels), by.x="cell", by.y=0) %>%
-  rename(allen.labels = pruned.labels)
+neurons <- c("2. Cell-type analysis/inhibitory/data/inhibitory.predicted.annotation.rds",
+             "2. Cell-type analysis/excitatory/data/cux2+.predicted.annotation.rds",
+             "2. Cell-type analysis/excitatory/data/cux2-.predicted.annotation.rds")
+
+preds <- lapply(neurons, \(v) readRDS(gsub(".h5Seurat", ".predicted.annotation.rds", v))["pruned.labels"] %>% as.matrix) %>% 
+  do.call(rbind, .) %>%
+  rename(allen.labels = pruned.labels) %>%
+  rownames_to_column("cell")
 h5write(preds, file, "neuronal/allen.annotations")
 rm(preds, df)
 

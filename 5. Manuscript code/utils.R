@@ -64,14 +64,12 @@ atlas <- list(
     state.order = c(paste0("OPC.", 1:3), "MFOL", "COP", paste0("Oli.", 1:12)),
     main.group = c(rep("OPC", 5), rep("Oli", 12)),
     genes = list(
-      `1`=c("APOE", "CLU", "PINK1", "TOMM20", "TOMM7", "UBA52", "UBB", "UBC"),
-      `3`=c("INPP5F", "JUN", "MATN2", "TNC"),
+      `1`=c("PINK1", "TOMM20", "TOMM7"),
+      `opc3`=c("SERPINA3", "OSMR"),
       `mfol`=c("ABCA2", "CNTN2"),
       `cop`=c("SOX10", "SOX6", "SOX8", "TNFRSF21", "ZNF365"),
-      `6`=c("EFR3B", "ENPP6", "EPHB2", "ETV5", "PARD3B", "SGCZ", "SMOC1", "TMEM132B"),
-      `7`=c("ATP1B3", "IRAK2", "QDPR", "S100A6", "SEMA3C", "SLC38A2"),
-      `8`=c("CRYAB", "DNAJB1", "DNAJB6", "DNAJC1", "HSPA1A", "HSPA1B", "HSPA4L", "HSPH1", "PTGES3"),
-      `other`=c("AGBL4", "ATP6V0D2", "C5orf17", "EPHA6", "PSKH2", "SAMMSON")
+      `7`=c("QDPR", "DPYD", "S100A6", "SEMA3C", "SLC38A2"),
+      `8`=c("DNAJB1", "DNAJB6", "DNAJC1", "HSPA1A", "HSPA1B", "HSPA4L", "HSPH1", "PTGES3")
     )
   ),
   endo = list(

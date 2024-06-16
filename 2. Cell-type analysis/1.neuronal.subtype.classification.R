@@ -6,6 +6,9 @@ library(dplyr)
 library(tibble)
 
 
+# The following script trains a SingleR classifier over the Allen Brain institute atlas
+# to annotate the neuronal subtypes in the present atlas. 
+
 ref.labels.full <- read.csv("2. Cell-type analysis/data/allen.annotations.csv") %>% column_to_rownames("sample_name")
 ref.counts.full <- read.csv("2. Cell-type analysis/data/allen.counts.matrix.csv", sep = ",", row.names = 1)
 
@@ -15,7 +18,6 @@ neurons <- list(
   `cux2-`    = list(label.atlas = "Glutamatergic", seurat.obj = "2. Cell-type analysis/excitatory/data/cux2-.h5Seurat"))
 
 for(conf in neurons) {
-  
   # Load query neuronal dataset
   query.counts <- GetAssayData(LoadH5Seurat(conf$seurat.obj, assays = c(SCT = "data"), graphs = FALSE, images = NULL)[["SCT"]]) %>% as.matrix()
   

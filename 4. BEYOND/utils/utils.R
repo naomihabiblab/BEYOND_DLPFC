@@ -72,21 +72,21 @@ fit.trajectories.palantir <- function(data, dm, dm.k, palantir.k, scale, root.cl
 fit.trajectories.via <- function(data.path="2. Cell-type analysis/data/subpopulation.proportions.h5ad", 
                                  knn, too.big, too.small, root.clusters, exclude.clusters=c()) {
   if(!"BEYOND.ViaEnv" %in% reticulate::conda_list()[,"name"]) {
-    reticulate::conda_create("BEYOND.ViaEnv", python_version = "3.7", packages=c("pybind11"), pip=TRUE)
+    reticulate::conda_create("BEYOND.ViaEnv", python_version = "3.7", packages="pybind11", pip=TRUE)
     reticulate::conda_install("BEYOND.ViaEnv", packages = "hnswlib")
-    reticulate::conda_install("BEYOND.ViaEnv", packages="pyVIA", pip=TRUE)
+    reticulate::conda_install("BEYOND.ViaEnv", packages="pyvia", pip=TRUE)
   }
   
   filename <- '4. BEYOND/data/via.pickle'
   system(stringr::str_interp(
-    paste("${reticulate::conda_binary()} run -n BEYOND.ViaEnv python '4. BEYOND/utils/run.via.trajectories.py'",
-          "--data_file '${data.path}'",
-          "--output_path '${filename}'",
-          "--k ${as.integer(knn)}",
-          "--big ${paste(too.big, collapse=' ')}",
-          "--small ${paste(as.integer(too.small), collapse=' ')}",
-          "--root_clusters ${paste(root.clusters, collapse=' ')}",
-          "--exclude_clusters ${paste(exclude.clusters, collapse=' ')}")))
+    paste('${reticulate::conda_binary()} run -n BEYOND.ViaEnv python "4. BEYOND/utils/run.via.trajectories.py"',
+          '--data_file "${data.path}"',
+          '--output_path "${filename}"',
+          '--k ${as.integer(knn)}',
+          '--big ${paste(too.big, collapse=" ")}',
+          '--small ${paste(as.integer(too.small), collapse=" ")}',
+          '--root_clusters ${paste(root.clusters, collapse=" ")}',
+          '--exclude_clusters ${paste(exclude.clusters, collapse=" ")}')))
 
   res <- reticulate::py_load_object(filename)
   res$pseudotime <- setNames(unlist(res$pseudotime), res$idents)
@@ -97,7 +97,7 @@ fit.trajectories.via <- function(data.path="2. Cell-type analysis/data/subpopula
     pseudotime = res$pseudotime,
     branch.probs = res$trajectories.normalized %>% `colnames<-`(paste0("X", colnames(.))),
     branch.probs.scaled = res$trajectories.scaled %>% `colnames<-`(paste0("X", colnames(.))),
-    terminals = data.frame(pseudotime=res$pseudotime[terminal.points]) %>% mutate(terminals=rownames(.)) %>% `rownames<-`(paste0("X", rownames(.))),
+    terminals = data.frame(pseudotime=res$pseudotime[terminal.points]) %>% mutate(terminal=rownames(.)) %>% `rownames<-`(paste0("X", rownames(.))),
     user.root = res$user.root,
     params = params[3:length(params)]
   )

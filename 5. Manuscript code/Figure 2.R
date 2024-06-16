@@ -218,7 +218,7 @@ rm(ct,  sigs, de, exp, df, mtx, significance, labeling)
 # ----------------------------------------------------------------------------------------------------------------- #
 #                                          Dotplots of top and selected DEGs                                        #
 # ----------------------------------------------------------------------------------------------------------------- #
-n.genes = list(inhibitory=4, excitatory=4, endo=4, astrocytes=4, oligodendroglia=3, microglia=3)
+n.genes = list(inhibitory=4, excitatory=4, endo=4, astrocytes=4, oligodendroglia=4, microglia=3)
 
 pdf(file.path(panel.path, "2.dotplots.pdf"), height=embed.height, width = embed.width*2)
 for(ct in names(atlas)) {
@@ -227,7 +227,7 @@ for(ct in names(atlas)) {
   if("genes" %in% names(atlas[[ct]]))
     additional.genes = unname(unlist(atlas[[ct]]$genes))
   
-  genes <- h5read(aggregated.data, file.path(mapping[[ct]], "de")) %>% 
+  genes <- h5read(aggregated.data, file.path(mapping[[ct]], "de")) %>%
     filter(avg_log2FC > 0) %>%
     group_by(gene) %>%
     slice_max(avg_log2FC, n=1) %>%
@@ -248,7 +248,198 @@ for(ct in names(atlas)) {
              cluster_rows=FALSE, scale="col")
   
   draw(hm[[1]], merge_legend=TRUE, annotation_legend_list=hm[[2]])
-}
+  }
 while (!is.null(dev.list()))  dev.off()
 rm(ct, genes, hm, additional.genes, n.genes)
 
+
+
+
+
+# ----------------------------------------------------------------------------------------------------------------- #
+#                                Dotplots of top and selected DEGs - Oligodendroglia specific                       #
+# ----------------------------------------------------------------------------------------------------------------- #
+
+# Retrieve oligodendroglia DEGs + pseudobulk gene expression
+de  <- h5read(aggregated.data, file.path(mapping[["oligodendroglia"]], "de")) %>% filter(avg_log2FC > 0)
+exp <- h5read(aggregated.data, file.path(mapping[["oligodendroglia"]], "gene.exp"))
+
+# Create general OPC vs Oligo heatmap
+genes <- list(OPCs=c("PCDH15", "VCAN", "PDGFRA"),
+              Oligodendrocytes=c("MBP", "MOG", "MAG"))
+
+ct.hm <- exp %>% filter(gene %in% unlist(genes)) %>%
+  gheatmap(color.by="mean.exp", size.by="pct.exp", 
+           name = "Cell-type marker",
+           row.order = list(a=atlas$oligodendroglia$state.order),
+           column.order = genes,
+           cluster_columns=FALSE, column_gap = unit(0, "mm"),
+           cols = green2purple,
+           border=TRUE,
+           cluster_rows=FALSE, scale="col")
+
+# Create within OPCs and within Oligos heatmaps
+states <- atlas$oligodendroglia$state.order %>% split(., if_else(grepl("Oli.", .),"Oligodendrocytes", "OPCs"))
+additional.genes <- list(
+  OPCs = c("PINK1", "TOMM20", "TOMM7", "SERPINA3", "OSMR", "CNTN2", "SOX10", "SOX6"),
+  Oligodendrocytes = c("QDPR", "DPYD", "S100A6", "SEMA3C", "SLC38A2", "DNAJB1", "DNAJB6", "DNAJC1", "HSPA1A", "HSPA1B", "HSPA4L", "HSPH1", "PTGES3"))
+
+hms <- lapply(names(states), \(ct) {
+  genes <- de %>% 
+    filter(cluster %in% states[[ct]]) %>%
+    group_by(gene) %>%
+    slice_max(avg_log2FC, n=1) %>%
+    group_by(cluster) %>% 
+    arrange(desc(avg_log2FC)) %>%
+    filter(row_number() <= 3 | gene %in% additional.genes[[ct]]) %>% 
+    unstack(gene~cluster) %>% as.list
+  
+  exp %>% filter(gene %in% unlist(genes)) %>%
+    gheatmap(color.by="mean.exp", size.by="pct.exp", 
+             name = paste0(ct, "\nmean exp."),
+             row.order = list(a=atlas$oligodendroglia$state.order),
+             column.order = genes[states[[ct]]],
+             cluster_columns=FALSE, column_gap = unit(0, "mm"),
+             cols = green2purple,
+             border=TRUE,
+             cluster_rows=FALSE, scale="col")
+})
+
+
+pdf(file.path(panel.path, "2.dotplots.oligodendroglia.specific.pdf"), height=embed.height, width = embed.width*2)
+draw(ct.hm[[1]] + hm[[2]][[1]] + hm[[1]][[1]] , merge_legend=TRUE, 
+     annotation_legend_list=hm[[1]][[2]][[1]])
+dev.off()
+
+
+# ----------------------------------------------------------------------------------------------------------------- #
+#                                              Clustering-goodness confusion plots                                  #
+# ----------------------------------------------------------------------------------------------------------------- #
+
+library(SeuratDisk)
+library(dplyr)
+library(Seurat)
+
+objs <- c(sapply(c("microglia","astrocytes","oligodendroglia","inhibitory"), 
+                 \(ct) paste0(ct, "/data/", ct, ".h5Seurat")),
+          endo = "vascular.niche/data/vascular.niche.h5Seurat",
+          `cux2-`="excitatory/data/cux2-.h5Seurat",
+          `cux2+`="excitatory/data/cux2+.h5Seurat")
+
+for (ct in names(objs)) {
+  message(ct)
+  
+  obj      <- LoadH5Seurat(objs[[ct]], assays=list(SCT=c("data")), verbose=F)
+  clusters <- Idents(obj)
+  
+  if(! "SCT_snn" %in% names(obj@graphs))
+    obj <- FindNeighbors(obj, reduction="pca", dims = 1:50)
+  
+  combs <- expand.grid(clusters %>% unique() %>% as.vector(), 
+                       clusters %>% unique() %>% as.vector()) %>% t()
+  dists <- apply(combs, 2, function(pair_){
+    cells1 <- names(clusters)[clusters == pair_[[1]] %>% as.vector()]
+    cells2 <- names(clusters)[clusters == pair_[[2]] %>% as.vector()]
+    (rowSums(obj@graphs$SCT_snn[cells1, cells2])/rowSums(obj@graphs$SCT_snn[cells1, ])) %>% mean()
+  })
+  # saveRDS(list(dists = rbind(combs, dists) %>% t() %>% as.data.frame() %>% tidyr::spread(Var1, dists) %>% tibble::column_to_rownames("Var2"), 
+             # clusters = clusters), paste0("5. Manuscript code/data/", ct, ".knn.rds"))
+  
+  saveRDS(list(dists = rbind(combs, dists) %>% t() %>% as.data.frame() %>% tidyr::spread(Var1, dists) %>% tibble::column_to_rownames("Var2"), 
+               clusters = clusters), paste0(ct, ".knn.rds"))
+  
+  rm(obj, clusters, combs, dists)
+}
+
+
+pdf(file.path(panel.path, "2.cluster.goodness.confusions.pdf"), height=embed.height, width = embed.width+.25)
+for(ct in names(objs)) {
+  df <- readRDS(paste0("5. Manuscript code/data/", ct, ".knn.rds")) 
+  mtx <- sapply(df$dists, as.numeric) %>% `rownames<-`(rownames(df$dists))
+  
+  if(ct %in% c("cux2+", "cux2-"))
+    ord <- intersect(atlas$excitatory$state.order, rownames(mtx))
+  else
+    ord <- atlas[[ct]]$state.order
+  
+  Heatmap(mtx[ord, ord],
+          col=colorRampPalette(c("white","darkgreen","#5F9E5F","#A074B6","darkorchid4"))(21),
+          cluster_rows = F, cluster_columns = F, border=T) %>% draw()
+  
+}
+while (!is.null(dev.list()))  dev.off()
+
+
+# ----------------------------------------------------------------------------------------------------------------- #
+#                                            Heatmaps of predicted neuronal subtypes                                #
+# ----------------------------------------------------------------------------------------------------------------- #
+neurons <- merge(annotations %>% rownames_to_column("cell"), h5read(aggregated.data, "neuronal/allen.annotations")) %>%
+  count(grouping.by, state, allen.labels) %>% 
+  group_by(grouping.by, state) %>%
+  mutate(prop = n/sum(n)) %>%
+  ungroup()
+
+neuronal.subtypes <- neurons %>%
+  select(allen.labels) %>% unique %>%
+  tidyr::separate(col = "allen.labels", sep = " ", into = c("type", "layer", "marker.1", "marker.2"), extra = "merge", remove = FALSE) %>%
+  mutate(marker.1 = factor(marker.1, rev(c("LAMP5", "PAX6", "SST", "VIP", "PVALB","RORB", "LINC00507","THEMIS","FEZF2"))),
+         across(c(layer, marker.2), ~factor(., sort(unique(.))))) %>%
+  column_to_rownames("allen.labels")
+
+ord <- c(
+"Exc L2 LINC00507 GLRA3", "Exc L2 LAMP5 KCNG3", "Exc L2 LINC00507 ATP7B", "Exc L2-3 LINC00507 DSG3",
+"Exc L3 LAMP5 CARM1P1", "Exc L3 THEMIS ENPEP", "Exc L2-3 RORB RTKN2", "Exc L2-3 RORB PTPN3",
+"Exc L2-3 RORB CCDC68", "Exc L3-5 RORB TNNT2", "Exc L3-5 RORB LAMA4", "Exc L3 RORB OTOGL",
+"Exc L3-5 RORB LINC01202", "Exc L3-5 RORB LNX2", "Exc L3-5 RORB RPRM", "Exc L5 THEMIS SLC22A18",
+"Exc L6 THEMIS LINC00343", "Exc L6 THEMIS SNTG2", "Exc L5-6 THEMIS TNFAIP6", "Exc L6 THEMIS SLN",
+"Exc L5 RORB MED8", "Exc L5 THEMIS FGF10", "Exc L5 THEMIS VILL", "Exc L5-6 FEZF2 IFNG-AS1",
+"Exc L5 FEZF2 NREP-AS1", "Exc L5 FEZF2 RNF144A-AS1", "Exc L5 FEZF2 PKD2L1", "Exc L5-6 FEZF2 LPO",
+"Exc L6 FEZF2 KLK7", "Exc L6 FEZF2 POGK", "Exc L6 FEZF2 FFAR4", "Exc L6 FEZF2 PROKR2",
+"Exc L5-6 FEZF2 CFTR", "Exc L6 FEZF2 PDYN", "Exc L5-6 FEZF2 C9orf135-AS1", "Exc L5-6 FEZF2 SH2D1B",
+"Exc L5 THEMIS RGPD6", "Exc L5-6 FEZF2 FILIP1L", "Exc L5-6 FEZF2 OR1L8", "Exc L5 THEMIS LINC01116",
+"Exc L5-6 THEMIS SMYD1", "Exc L5 FEZF2 CSN1S1", "Exc L3-5 FEZF2 ASGR2", "Exc L3-5 FEZF2 LINC01107",
+"Inh L1-6 SST NPY", "Inh L1-6 LAMP5 AARD", "Inh L1 LAMP5 RAB11FIP1", "Inh L1-6 LAMP5 NES", "Inh L5-6 LAMP5 CRABP1",
+"Inh L1-6 LAMP5 CA1", "Inh L1 PAX6 MIR101-1", "Inh L3-6 PAX6 LINC01497", "Inh L5-6 SST BEAN1",
+"Inh L5-6 SST DNAJC14", "Inh L5-6 SST KLHL1", "Inh L5-6 SST FBN2", "Inh L5-6 SST C4orf26",
+"Inh L1-2 SST PRRT4", "Inh L3-5 SST GGTLC3", "Inh L1-2 SST CLIC6", "Inh L2 PVALB FRZB",
+"Inh L2-3 SST NMU", "Inh L1-2 SST CCNJL", "Inh L1-3 SST FAM20A", "Inh L3-5 SST CDH3",
+"Inh L5 SST RPL35AP11", "Inh L5-6 SST PAWR", "Inh L3-5 SST OR5AH1P", "Inh L5-6 SST PIK3CD",
+"Inh L5-6 PVALB SST CRHR2", "Inh L5-6 SST ISX", "Inh L1 SST DEFB108B", "Inh L1 LAMP5 BMP2",
+"Inh L1 PVALB SST ASIC4", "Inh L1 PAX6 CHRFAM7A", "Inh L1-6 VIP SLC7A6OS", "Inh L1 LAMP5 PVRL2",
+"Inh L1 SST P4HA3", "Inh L1 LAMP5 NMBR", "Inh L2 PAX6 FREM2", "Inh L1-2 VIP HTR3A", "Inh L1-2 VIP WNT4",
+"Inh L1-5 VIP PHLDB3", "Inh L1-5 VIP LINC01013", "Inh L3-6 VIP UG0898H09", "Inh L3-6 VIP ZIM2-AS1",
+"Inh L1-5 VIP CD27-AS1", "Inh L2-5 VIP SOX11", "Inh L1-2 VIP PTGER3", "Inh L2-5 VIP BSPRY", "Inh L5-6 VIP COL4A3",
+"Inh L1-2 VIP SCML4", "Inh L2 VIP SLC6A16", "Inh L1-3 VIP HSPB6", "Inh L1-5 VIP SMOC1", "Inh L1-3 VIP CHRNA2",
+"Inh L3-5 VIP HS3ST3A1", "Inh L1-2 VIP EXPH5", "Inh L1-3 VIP FNDC1", "Inh L1 VIP KLHDC8B", "Inh L1-3 VIP CBLN1",
+"Inh L3-5 VIP IGDCC3", "Inh L3-5 VIP TAC3", "Inh L1-6 PVALB COL15A1", "Inh L5-6 PVALB ZFPM2-AS1",
+"Inh L6 SST TH", "Inh L5-6 PVALB GAPDHP60", "Inh L5-6 PVALB KCNIP2", "Inh L1-2 SST CLIC6",
+"Inh L2 PVALB FRZB", "Inh L2-5 PVALB RPH3AL", "Inh L1-2 PVALB CDK20", "Inh L3 PVALB SAMD13",
+"Inh L3-5 PVALB ISG20", "Inh L2-5 PVALB HHIPL1", "Inh L5-6 PVALB FAM150B", "Inh L5-6 PVALB MEPE", "Inh L5 PVALB LRIG3")
+
+sets = list(c("Inhibitory Neurons", "inhibitory"), c("Excitatory Neurons", "excitatory"))
+
+pdf(file.path(panel.path, "2.neuronal.confusions.pdf"), height=embed.height*2, width = embed.width*2)
+for(set in sets) {
+df <- pivot_wider(neurons %>% filter(grouping.by == set[[1]]), id_cols="allen.labels", names_from = "state", values_from = "prop", values_fill = 0) %>% 
+  column_to_rownames("allen.labels") %>%
+  `[`(intersect(v, rownames(.)), atlas[[set[[2]]]]$state.order) %>%
+  as.matrix
+
+Heatmap(df, 
+        col=colorRampPalette(c("white","darkgreen","#5F9E5F","#A074B6","darkorchid4"))(21),#colorRampPalette(c("white","#eb8694","#A074B6","darkorchid4"))(21), 
+        width = unit(ncol(df)*.35,"cm"),
+        border=T,
+        column_order = atlas[[set[[2]]]]$state.order, 
+        cluster_rows = F, cluster_row_slices = F,
+        right_annotation = rowAnnotation(
+          `Cortical layer` = anno_text(paste(neuronal.subtypes[rownames(df), "layer"], "  ")),
+          `Marker 1` = anno_text(paste(neuronal.subtypes[rownames(df), "marker.1"], "  ")),
+          `Marker 2` = anno_text(neuronal.subtypes[rownames(df), "marker.2"])
+        ),
+        left_annotation = rowAnnotation(
+          `Cortical layer` = neuronal.subtypes[rownames(df), "layer"],
+          marker1 = neuronal.subtypes[rownames(df), "marker.1"]),
+        show_row_names = F) %>% draw()
+}
+while (!is.null(dev.list()))  dev.off()
+rm(df, sets, set, ord, neuronal.subtypes, neurons)
