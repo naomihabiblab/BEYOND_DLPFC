@@ -94,7 +94,7 @@ rm(ct)
 excluded.signatures = list(dummy=c("ABC"), `Sadick J.S. et al (2022)`=c())
 
 pdf(file.path(panel.path, "2.signatures.pdf"), height=embed.height*1.25, width = embed.width*1.5)
-for(ct in c("vascular.niche","microglia","astrocytes","oligodendroglia")) {
+for(ct in c("endo","microglia","astrocytes","oligodendroglia")) {
   
   sigs <- h5read(aggregated.data, file.path(mapping[[ct]], "signatures"))
   sigs$scores <- sigs$scores %>% mutate(sig.full=paste(reference, signature)) %>%
@@ -315,7 +315,6 @@ dev.off()
 # ----------------------------------------------------------------------------------------------------------------- #
 #                                              Clustering-goodness confusion plots                                  #
 # ----------------------------------------------------------------------------------------------------------------- #
-
 library(SeuratDisk)
 library(dplyr)
 library(Seurat)
@@ -342,17 +341,14 @@ for (ct in names(objs)) {
     cells2 <- names(clusters)[clusters == pair_[[2]] %>% as.vector()]
     (rowSums(obj@graphs$SCT_snn[cells1, cells2])/rowSums(obj@graphs$SCT_snn[cells1, ])) %>% mean()
   })
-  # saveRDS(list(dists = rbind(combs, dists) %>% t() %>% as.data.frame() %>% tidyr::spread(Var1, dists) %>% tibble::column_to_rownames("Var2"), 
-             # clusters = clusters), paste0("5. Manuscript code/data/", ct, ".knn.rds"))
-  
-  saveRDS(list(dists = rbind(combs, dists) %>% t() %>% as.data.frame() %>% tidyr::spread(Var1, dists) %>% tibble::column_to_rownames("Var2"), 
-               clusters = clusters), paste0(ct, ".knn.rds"))
-  
+  saveRDS(list(dists = rbind(combs, dists) %>% t() %>% as.data.frame() %>% tidyr::spread(Var1, dists) %>% tibble::column_to_rownames("Var2"),
+               clusters = clusters), paste0("5. Manuscript code/data/", ct, ".knn.rds"))
+
   rm(obj, clusters, combs, dists)
 }
 
 
-pdf(file.path(panel.path, "2.cluster.goodness.confusions.pdf"), height=embed.height, width = embed.width+.25)
+pdf(file.path(panel.path, "2.cluster.goodness.confusions.pdf"), height=embed.height*2, width = embed.width*2)
 for(ct in names(objs)) {
   df <- readRDS(paste0("5. Manuscript code/data/", ct, ".knn.rds")) 
   mtx <- sapply(df$dists, as.numeric) %>% `rownames<-`(rownames(df$dists))
@@ -362,7 +358,8 @@ for(ct in names(objs)) {
   else
     ord <- atlas[[ct]]$state.order
   
-  Heatmap(mtx[ord, ord],
+  Heatmap(t(mtx[ord, ord]),
+          width = unit(embed.width, "cm"), height = unit(embed.height, "cm"),
           col=colorRampPalette(c("white","darkgreen","#5F9E5F","#A074B6","darkorchid4"))(21),
           cluster_rows = F, cluster_columns = F, border=T) %>% draw()
   
