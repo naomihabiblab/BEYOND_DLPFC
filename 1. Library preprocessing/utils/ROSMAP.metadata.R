@@ -1,8 +1,14 @@
 library(dplyr)
 
-
-load.metadata <- function(path = "1. Library preprocessing/data/ROSMAP.participants.metadata_04-25-2022.csv") {
-  read.csv(path, header = T) %>%
+#' Load participants (snRNA-seq discovery cohort and bulk replication cohort) demographic, clinical and pathological information
+#' While the original analysis was performed using the projid for participant identification, publicly available information
+#' provides the individualID field for participant identification. The additional `id.by.idividualID` is added to assist with
+#' running the below code with the provided supplementary tables (published with the individualID instead of the projid) 
+load.metadata <- function(path = "1. Library preprocessing/data/ROSMAP.participants.metadata_04-25-2022.csv",
+                          projid.individualID.mapping = "1. Library preprocessing/data/ROSMAP.id.mapping.csv",
+                          id.by.individualID = FALSE) {
+  # The ROSMAP.id.mappings.csv is derived from the Synapse available ROSMAP_clinical.csv containing the projid to individualID mapping
+  df <- read.csv(path, header = T) %>%
     dplyr::mutate(
       projid = as.character(projid),
       sex = factor(plyr::mapvalues(msex, c(F,T), c("Female", "Male"))),
@@ -35,6 +41,12 @@ load.metadata <- function(path = "1. Library preprocessing/data/ROSMAP.participa
                   cdx.txt = factor(cogdx, levels=c(1,2,3,4,5,6), labels=c("No Cognitive\nImpairment", "Mild\nCognitive Impairment", 
                                                                           "Mild Cognitive\nImpairment\nand Another\nCause of CI", "AD", 
                                                                           "AD\nand Another\nCause of CI", "Other Dementia")),
-                  niareagen.txt = factor(niareagansc, levels=4:1, labels = c("No AD", "Low", "Intermediate", "High"))) %>%
+                  niareagen.txt = factor(niareagansc, levels=4:1, labels = c("No AD", "Low", "Intermediate", "High"))) %>% 
     tibble::column_to_rownames("projid")
+  
+  if(!id.by.individualID)
+    return(df)
+  
+  return(df %>% merge(read.csv(projid.individualID.mapping) %>% dplyr::select(projid, individualID), by.x=0, by.y="projid") %>%
+           dplyr::select(-Row.names) %>% tibble::column_to_rownames("individualID"))
 }

@@ -1,4 +1,4 @@
-source("2. Cell-type analysis/load.code.env.R")
+source("2. Cell-type analysis/utils/load.code.env.R")
 library(mediation)
 library(lavaan)
 library(semPlot)
@@ -9,7 +9,7 @@ library(semPlot)
 ##                                                 #  Mediation Modeling  #                                       ##
 ####################################################################################################################
 # (ROSMAP data download 04/25/2022)
-source("1. Library preprocessing/data/ROSMAP.metadata.R")
+source("1. Library preprocessing/utils/ROSMAP.metadata.R")
 
 data <- anndata::read_h5ad("2. Cell-type analysis/data/subpopulation.proportions.h5ad")
 df.full <- rbind(data.frame(cohort = "discovery", sqrt(data$X[,c("Mic.12","Mic.13","Ast.10","Oli.7")])),
@@ -18,15 +18,16 @@ df.full <- rbind(data.frame(cohort = "discovery", sqrt(data$X[,c("Mic.12","Mic.1
   # Add snRNA-seq library quality measures (for discovery participants only)
   merge(., data$obsm$QCs[,c("Total_Genes_Detected","Estimated_Number_of_Cells")], all.x=TRUE, by.x="row.names", by.y="row.names") %>%
   # Add bulk library quality measure (RIN, used only for replication participants)
-  merge(., read.csv("all/data/RIN_n1089_08222023.csv", row.names = 1), all.x=TRUE, by.x="Row.names", by.y="row.names") %>%
+  merge(., read.csv("3. Other analyses/data/ROSMAP.bulk.RIN.values_08222023.csv", row.names = 1), all.x=TRUE, by.x="Row.names", by.y="row.names") %>%
   # Add phenotypic data of participants from both cohorts
-  merge(., load.metadata() %>% 
-          select(cogng_demog_slope, sqrt.amyloid_mf, sqrt.tangles_mf, age_death, sex, pmi, apoe_genotype) %>%
+  merge(., load.metadata(id.by.individualID = FALSE) %>% 
+          dplyr::select(cogng_demog_slope, sqrt.amyloid_mf, sqrt.tangles_mf, age_death, sex, pmi, apoe_genotype) %>%
           mutate(msex = sex == "Male",
                  apoe4n = stringr::str_count(apoe_genotype, "4")) %>%
-          select(-sex, -apoe_genotype), 
+          dplyr::select(-sex, -apoe_genotype), 
         all.x=TRUE, by.x="Row.names", by.y="row.names") %>%
   column_to_rownames("Row.names")
+
 
 
 # -------------------------------------------------------- #
@@ -222,6 +223,27 @@ m2 <- lm(cogng_demog_slope~Ast.10+sqrt.amyloid_mf+sqrt.tangles_mf+pmi+Estimated_
 # n=412
 # 0.2554 - 0.2304
 # [1] 0.025
+
+
+df <- subset(df.full, cohort == "discovery" & !is.na(sqrt.tangles_mf))
+m1<-lm(sqrt.tangles_mf~Mic.13+age_death+msex+pmi+Estimated_Number_of_Cells+Total_Genes_Detected,data=df);summary(m1)
+m2<-lm(Ast.10~sqrt.tangles_mf+Mic.13+age_death+msex+pmi+Estimated_Number_of_Cells+Total_Genes_Detected,data=df);summary(m2)
+set.seed(1347)
+
+m_med_m13TauA10<-mediate(m1, m2, sims=10000, boot=TRUE, treat="Mic.13", mediator="sqrt.tangles_mf")
+summary(m_med_m13TauA10)
+# Causal Mediation Analysis
+# Nonparametric Bootstrap Confidence Intervals with the Percentile Method
+# Estimate 95% CI Lower 95% CI Upper p-value   
+# ACME             0.1124       0.0190         0.23   0.015 * 
+# ADE              0.2383       0.0646         0.41   0.006 **
+# Total Effect     0.3507       0.1829         0.53  <2e-16 ***
+# Prop. Mediated   0.3205       0.0605         0.71   0.015 * 
+# ---
+# Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+# Sample Size Used: 433
+# Simulations: 10000
+
 
 
 # -------------------------------------------------------- #
