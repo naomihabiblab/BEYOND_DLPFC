@@ -218,7 +218,7 @@ rm(ct,  sigs, de, exp, df, mtx, significance, labeling)
 # ----------------------------------------------------------------------------------------------------------------- #
 #                                          Dotplots of top and selected DEGs                                        #
 # ----------------------------------------------------------------------------------------------------------------- #
-n.genes = list(inhibitory=4, excitatory=4, endo=4, astrocytes=4, oligodendroglia=4, microglia=3)
+n.genes = list(inhibitory=4, excitatory=4, endo=4, astrocytes=3, oligodendroglia=4, microglia=3)
 
 pdf(file.path(panel.path, "2.dotplots.pdf"), height=embed.height, width = embed.width*2)
 for(ct in names(atlas)) {
