@@ -50,14 +50,14 @@ atlas <- list(
     main.group  = c(rep("Homeostatic", 3), rep("Reactive", 3), "Interferon", rep("Stress", 3)),
     genes = list(
       `1-3`=c("EPHB1", "GABAR2", "GRM3", "SLC1A2"),
-      `3`=c("ATP6V0C", "COX4l1", "COX6A1", "NEFL", "PINK1", "TOMM20", "TOMM7", "UBE2M"),
+      `3`=c("PINK1", "YWHAH", "YWHAG", "RPL13"),
       `4-5`=c("GFAP"),
       `4`=c("GRIA1", "GRID2", "VCAN"),
-      `5`=c("FGF2", "FGFR2", "IGFBP7", "ITGB1", "NRP1", "PRKCA", "PRKCE", "OSMR", "SERPINA3"),
+      `5`=c("FGF2", "FGFR2", "IGFBP7", "ITGB1", "OSMR", "SERPINA3"),
       `7`=c("IFI6", "IFIT1", "IFIT3"),
-      `8`=c("ABCA1", "F3", "GPI", "HMGCS1", "HSP90AA1", "HSPA9", "JUN", "LDLR", "NR4A2", "NR4A3", "NTRK2", "SLC4A4", "SLC7A11", "TJP1"),
+      `8`=c("ABCA1", "HSP90AA1", "HSPA9", "JUN", "LDLR", "NR4A2", "NR4A3", "NTRK2", "SLC4A4", "SLC7A11", "TJP1"),
       `9`=c("APOE", "CAMK2D", "DNAJB1", "DNAJB6", "FKBP4", "FTH1", "FTL", "SOD1"),
-      `10`=c("CSPG5", "DLC1", "GJA1", "MT1E", "MT1F", "MT1G", "OXR1", "PLXNB1", "SESN1", "SLC30A1", "SLC38A2", "SLC39A12")
+      `10`=c("CSPG5", "GJA1", "MT1E", "MT1F", "MT1G", "PLXNB1", "SLC30A1", "SLC38A2", "SLC39A12")
     )
   ),
   oligodendroglia = list(
