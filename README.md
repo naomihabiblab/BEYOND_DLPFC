@@ -98,6 +98,7 @@ To load endophenotype associations and their meta-analysis (discovery and replic
 
 ```R
 data <- anndata::read_h5ad("2. Cell-type analysis/data/subpopulation.proportions.h5ad")
+associations <- read.xlsx(SUPP$table.3, "Endophenotype associations") %>% split(., .$cohort)
 
 data$uns$trait.analysis <- list(
   snuc = associations$discovery, 
