@@ -150,18 +150,12 @@ rm(dyn.adjacency, corr, breaks, marks, mark.states, state.order, communities, me
 
 
 
-
 # ----------------------------------------------------------------------------------------------------------------- #
 #                                           Panel C - Communities dynamics                                          #
 # ----------------------------------------------------------------------------------------------------------------- #
-comm.cols <- list(C1="springgreen4", C2.2="darkorchid4", C2.3="firebrick4", C3="firebrick4")
-
-pdf(file.path(panel.path, "6C.pdf"), width=embed.width, height=embed.height)
-plot_grid(plot.dynamics(c("C1", "C2.2","C2.3"), dynamics = data$uns$communities$dynamics, cols = comm.cols, legend.position = "none", overlap.pseudotime = .1) + labs(x=NULL, y=NULL),
-          plot.dynamics(paste0("C",c(1,3)), dynamics = data$uns$communities$dynamics, cols = comm.cols, legend.position = "none", overlap.pseudotime = .1) + labs(x=NULL, y=NULL),
-          ncol=1)
+pdf(file.path(panel.path, "6C.pdf"), width=embed.width, height=embed.height/2)
+plot.dynamics(c("C1", "C2.2","C2.3","C3"), dynamics = data$uns$communities$dynamics, cols = comm.cols, legend.position = "none", overlap.pseudotime = .1) + labs(x=NULL, y=NULL)
 while (!is.null(dev.list()))  dev.off()
-rm(comm.cols)
 
 
 
@@ -469,21 +463,19 @@ rm(p, configuration, la, pos, graph, labelled, communities)
 # ----------------------------------------------------------------------------------------------------------------- #
 #                                           Panel C - Communities dynamics                                          #
 # ----------------------------------------------------------------------------------------------------------------- #
-comm.cols <- list(C1="springgreen4", C1.1="springgreen4", C1.2="olivedrab4", C2="darkorchid4", C2.1="springgreen4", C2.2="darkorchid4", C2.3="firebrick4", C3="firebrick4")
-
 pdf(file.path(panel.path, "s9C.pdf"), width=embed.width, height=embed.height*1.5)
 plot_grid(plot.dynamics(c("C1", "C2","C3"), dynamics = data$uns$communities$dynamics, cols = comm.cols, include.points = TRUE,  legend.position = c(3,3), overlap.pseudotime = .1) + labs(x=NULL, y=NULL),
           plot.dynamics(c("C1.1","C1.2"), dynamics = data$uns$communities$dynamics, cols = comm.cols, include.points = TRUE,legend.position = c(3,3), overlap.pseudotime = .1) + labs(x=NULL, y=NULL),
           plot.dynamics(c("C2.1","C2.2","C2.3"), dynamics = data$uns$communities$dynamics, cols = comm.cols, include.points = TRUE,legend.position = c(3,3), overlap.pseudotime = .1) + labs(x=NULL, y=NULL),
           ncol=1)
 while (!is.null(dev.list()))  dev.off()
-rm(comm.cols)
 
 
 
 # ----------------------------------------------------------------------------------------------------------------- #
 #                                       Panel D - Replication state dynamics                                        #
 # ----------------------------------------------------------------------------------------------------------------- #
+bulk <- anndata::read_h5ad("4. BEYOND/data/Celmod.subpopulation.proportion.h5ad")
 pdf(file.path(panel.path, "s9D.pdf"), width=embed.width, height=embed.height.small)
 for(states in state.dynamics.sets) {
   print(plot.dynamics(names(states), cols = states, data. = bulk, dynamics = bulk$uns$trajectories$dynamics, overlap.pseudotime=.2, label=TRUE, include.points = TRUE) + 
@@ -493,7 +485,7 @@ for(states in state.dynamics.sets) {
                 axis.text.y = element_text()) + 
           labs(x=NULL, y=NULL, title=NULL))}
 while (!is.null(dev.list()))  dev.off()
-rm(states)
+rm(states, bulk)
 
 
 

@@ -27,7 +27,7 @@ plot.umap <- function(name, cols=NULL) {
   
   return(ggplot(embedding, aes(x, y, color=state, label=state)) +
            scale_color_manual(values=cols) +
-           ggrastr::geom_point_rast(size=.01, raster.dpi = 600) +
+           ggrastr::geom_point_rast(size=.01, raster.dpi = 800) +
            geom_text(data = embedding %>% group_by(state) %>% summarise_at(vars(x, y), list(mean)), color="black") +
            annotate(geom = "text", label=text, x=pos[1], y=pos[2], hjust=0)+
            no.labs +
@@ -423,7 +423,7 @@ df <- pivot_wider(neurons %>% filter(grouping.by == set[[1]]), id_cols="allen.la
   as.matrix
 
 Heatmap(df, 
-        col=colorRampPalette(c("white","darkgreen","#5F9E5F","#A074B6","darkorchid4"))(21),#colorRampPalette(c("white","#eb8694","#A074B6","darkorchid4"))(21), 
+        col=colorRampPalette(c("white","darkgreen","#5F9E5F","#A074B6","darkorchid4"))(21),
         width = unit(ncol(df)*.35,"cm"),
         border=T,
         column_order = atlas[[set[[2]]]]$state.order, 

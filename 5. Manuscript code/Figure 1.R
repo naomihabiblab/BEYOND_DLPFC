@@ -93,7 +93,7 @@ embedding <- data.frame(embedding[shared,], annotations[shared, ])
 # Plot UMAP embedding of atlas
 pdf(file.path(panel.path, "1D.pdf"), width=8, height=8)
 ggplot(embedding, aes(x,y, color=state)) +
-  ggrastr::geom_point_rast(size=.05, raster.dpi = 600) + 
+  ggrastr::geom_point_rast(size=.05, raster.dpi = 1000) + 
   scale_color_manual(values = joint.state.colors, na.value = "lightgrey") +
   theme_classic() +
   no.labs + 
@@ -115,7 +115,7 @@ df <- annotations %>% filter(projid != "NA" & grouping.by != "Immune") %>%
 
 cols <- cell.group.color %>% `names<-`(recode(names(.), "Excitatory Neurons"="Exc. Neurons", "Inhibitory Neurons"="Inh. Neurons", "Oligodendrocytes"="Oligodend."))
 
-pdf(file.path(panel.path, "1E.pdf"), width=embed.width*2/3, height=embed.height)
+pdf(file.path(panel.path, "1E.pdf"), width=embed.width, height=embed.height)
 ggplot(df, aes(grouping.by, n, fill=grouping.by, color=grouping.by)) + 
   geom_boxplot(alpha=.3, outlier.shape = NA) +
   geom_point(alpha=.5, position = position_jitterdodge(jitter.width = 2.5, dodge.width = .7, jitter.height = 0)) + 
@@ -212,7 +212,7 @@ rm(df)
 #                                  Panel C - classifier predictions over example libraרies                          #
 # ----------------------------------------------------------------------------------------------------------------- #
 
-pdf(file.path(path, "s1C.pdf"), width=embed.width*2, height=embed.height*2)
+pdf(file.path(panel.path, "s1C.pdf"), width=embed.width*2, height=embed.height*2)
 lapply(c("191213-B7-B", "200720-B36-A"), function(n) {
   o <- readRDS(paste0("1. Library preprocessing/data/low.qual.thr.libs/", n, ".seurat.rds") )
   plot_grid(
@@ -232,7 +232,7 @@ o <- readRDS("1. Library preprocessing/data/low.qual.thr.libs/191213-B7-B.seurat
 cols2 <- colorRampPalett
 cols2 <- cols(length(unique(o$SCT_snn_res.0.2)))
 
-pdf(file.path(path, "s1D.pdf"), width=embed.width, height=embed.height*2)
+pdf(file.path(panel.path, "s1D.pdf"), width=embed.width, height=embed.height*2)
 plot_grid(
   DimPlot(o, group.by = "SCT_snn_res.0.2", pt.size = 1.75, ncol = 1, cols = cols2,
           raster = T, raster.dpi = c(1024,1024), label=T) + 
@@ -268,7 +268,7 @@ rm(o, cols2)
 # ----------------------------------------------------------------------------------------------------------------- #
 o <- readRDS("5. Manuscript code/data/library.for.fig.191213-B7-B.seurat.rds")
 
-pdf(file.path(path, "s1G.pdf"), width=embed.width, height=embed.height)
+pdf(file.path(panel.path, "s1G.pdf"), width=embed.width, height=embed.height)
 FetchData(o, c("UMAP_1","UMAP_2","is.doublet.demux")) %>% 
   `colnames<-`(c("x", "y", "demux")) %>% 
   #arrange(demux) %>%
@@ -290,7 +290,7 @@ rm(o)
 # ----------------------------------------------------------------------------------------------------------------- #
 o <- readRDS("5. Manuscript code/data/library.for.fig.191213-B7-B.seurat.rds")
 
-pdf(file.path(path, "s1H.pdf"), width=embed.width, height=embed.height)
+pdf(file.path(panel.path, "s1H.pdf"), width=embed.width, height=embed.height)
 FetchData(o, c("UMAP_1","UMAP_2","doublet.score")) %>% 
   `colnames<-`(c("x", "y", "score")) %>% 
   arrange(score) %>%
@@ -327,7 +327,7 @@ mcc <- lapply(libs, function(p) {
   return(doublets.measure)
 })
 
-pdf(file.path(path, "s1I.pdf"), width=embed.width, height=embed.height)
+pdf(file.path(panel.path, "s1I.pdf"), width=embed.width, height=embed.height)
 plot_grid(
   lapply(seq_along(mcc), function(i) data.frame(i=i, thr=mcc[[i]]$Cutoff, MCC=mcc[[i]]$MCC)) %>% 
     do.call(rbind, .) %>%
@@ -393,7 +393,7 @@ rm(o)
 # ----------------------------------------------------------------------------------------------------------------- #
 df <- annotations %>% filter(projid != "NA") %>% count(projid)
 
-pdf(file.path(path, "s1K.pdf"), width=embed.width, height=embed.height)
+pdf(file.path(panel.path, "s1K.pdf"), width=embed.width, height=embed.height)
 ggplot(df %>% rowwise() %>% mutate(n = min(n, 7000)), aes(x = n)) + 
   geom_histogram(alpha=.75, color="black",fill="#8D59A8", bins = 45) +  
   geom_vline(xintercept = 868) + 
@@ -416,7 +416,7 @@ df <- annotations %>% filter(projid != "NA" & grouping.by != "Immune") %>%
 
 cols <- cell.group.color %>% `names<-`(recode(names(.), "Excitatory Neurons"="Exc. Neurons", "Inhibitory Neurons"="Inh. Neurons", "Oligodendrocytes"="Oligodend."))
 
-pdf(file.path(path, "s1I.pdf"), width=embed.width*2/3, height=embed.height)
+pdf(file.path(panel.path, "s1I.pdf"), width=embed.width*2/3, height=embed.height)
 ggplot(df, aes(grouping.by, umi, fill=grouping.by, color=grouping.by)) + 
   geom_boxplot(alpha=.3, outlier.shape = NA) +
   geom_point(alpha=.5, position = position_jitterdodge(jitter.width = 2.5, dodge.width = .7, jitter.height = 0)) + 
@@ -433,10 +433,22 @@ rm(df, cols)
 # ----------------------------------------------------------------------------------------------------------------- #
 #                                           Panel M - Donor-nuclei stacked bar plot                                 #
 # ----------------------------------------------------------------------------------------------------------------- #
-pdf(file.path(path, "s1M.pdf"), width=embed.width*2/3, height=embed.height)
+pdf(file.path(panel.path, "s1M.pdf"), width=embed.width*2/3, height=embed.height)
 print(ggplot(annotations %>% filter(projid != "NA" & grouping.by != "Immune") %>% count(projid, grouping.by), 
              aes(reorder(projid, -n, sum), n, fill=reorder(grouping.by, -n, sum))) + 
         geom_bar(stat = "identity") + 
+        scale_y_continuous(expand=c(0,0)) + 
+        scale_fill_manual(values = cell.group.color) + 
+        coord_flip() + 
+        labs(x=NULL, y=NULL, fill="Cell Type Group", title="# Nuclei per donor") + 
+        theme_classic() +
+        theme(axis.text.y = element_blank(),
+              axis.ticks.y = element_blank(),
+              legend.position = c(.75,.35)))
+
+print(ggplot(annotations %>% filter(projid != "NA" & grouping.by != "Immune") %>% count(projid, grouping.by), 
+             aes(reorder(projid, -n, sum), n, fill=reorder(grouping.by, -n, sum))) + 
+        geom_bar(stat = "identity", position="fill") + 
         scale_y_continuous(expand=c(0,0)) + 
         scale_fill_manual(values = cell.group.color) + 
         coord_flip() + 

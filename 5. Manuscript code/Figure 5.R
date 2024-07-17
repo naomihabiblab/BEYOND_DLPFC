@@ -19,15 +19,12 @@ while (!is.null(dev.list()))  dev.off()
 
 
 
-
 # ----------------------------------------------------------------------------------------------------------------- #
 #                                           Panel C - State Prevalence PHATE                                        #
 # ----------------------------------------------------------------------------------------------------------------- #
 pdf(file.path(panel.path, "5C.pdf"), width=embed.width.small*.75*4, height=embed.height.small*2)
-plot.landscape(c("Ast.1", "Mic.12","Ast.10","Ast.5", "Mic.2","Mic.13","Oli.7","OPC.3"), 
-               enforce.same.color.scale = FALSE, smoothened = TRUE, ncol=4) %>% print(.)
+plot.landscape(c("Ast.1", "Mic.12","Ast.10","Ast.5", "Mic.2","Mic.13","Oli.7","OPC.3"), enforce.same.color.scale = FALSE, smoothened = TRUE, ncol=4) %>% print(.)
 while (!is.null(dev.list()))  dev.off()
-
 
 
 
@@ -37,7 +34,7 @@ while (!is.null(dev.list()))  dev.off()
 pdf(file.path(panel.path, "5D.pdf"), width=embed.width.small*.75, height=embed.height.small*3)
 plot_grid(
   plot.landscape(c("sqrt.amyloid_mf","sqrt.tangles_mf"), enforce.same.color.scale = FALSE, ncol = 1),
-  plot.landscape(c("cogng_demog_slope"), cols = function(n) viridis::turbo(n, direction=-1), sort.direction = -1, enforce.same.color.scale = FALSE, ncol = 1),
+  plot.landscape(c("cogng_demog_slope"), cols = function(n) colorRampPalette(rev(c("#30123BFF", "#4777EFFF", "#1BD0D5FF", "#62FC6BFF", "#D2E935FF", "#FE9B2DFF", "#DB3A07FF")))(n), sort.direction = -1, enforce.same.color.scale = FALSE, ncol = 1),
   ncol=1, rel_heights = c(2,1)
 )
 while (!is.null(dev.list()))  dev.off()
@@ -81,7 +78,7 @@ while (!is.null(dev.list()))  dev.off()
 
 
 # Landscape of key states
-pdf(file.path(panel.path, "5F.states.pdf"), width=embed.width.small*2, height=embed.height.small*2)
+pdf(file.path(panel.path, "5F.states.pdf"), width=embed.width.small, height=embed.height.small)
 plot.landscape(c("Ast.1","Ast.5","Ast.10","Mic.13"), "X_umap", enforce.same.color.scale = FALSE, size = 1, data. = bulk)
 while (!is.null(dev.list()))  dev.off()
 
@@ -127,11 +124,13 @@ while (!is.null(dev.list()))  dev.off()
 # ----------------------------------------------------------------------------------------------------------------- #
 #                                           Panel C - State Prevalence UMAP+tSNE                                    #
 # ----------------------------------------------------------------------------------------------------------------- #
-sub <- data[,data$uns$celmod$celmod.states]
+source("4. BEYOND/utils/utils.R")
 sc <- reticulate::import("scanpy")
+
+sub <- data[,data$uns$celmod$celmod.states]
 sc$external$tl$phate(sub, k = as.integer(10), n_components = as.integer(2),  a = as.integer(40), knn_dist =  "cosine", 
                      mds_dist = "cosine", mds_solver = "smacof", verbose = F)
-sub$obsp[["similarity_X_phate"]] <- embedding.similatity(sub$obsm[["X_phate"]], knn = 5)
+sub$obsp[["similarity_X_phate"]] <- embedding.similarity(sub$obsm[["X_phate"]], knn = 5)
 
 pdf(file.path(panel.path, "s8C.pdf"), width=embed.width*2.5, height=embed.height)
 args <- list(features = c("Ast.1","Mic.2","Mic.12","Mic.13","Oli.7","Ast.10","OPC.3","Ast.5","Ast.2","Ast.9"),
@@ -267,12 +266,12 @@ df <- data.frame(pseudotime=bulk$uns$trajectories$pseudotime,
                  py_to_r(bulk$uns$trajectories$branch.probs))
 
 pdf(file.path(panel.path, "s8I.clusters.pdf"), width=embed.width, height=embed.height)
-plot.landscape(c("clusters"),"X_umap", legend.position = c(3,3), cols = scales::hue_pal())
+plot.landscape(c("clusters"),"X_umap", legend.position = c(3,3), cols = scales::hue_pal(), data. = bulk)
 while (!is.null(dev.list()))  dev.off()
 
 
-pdf(file.path(panel.path, "s7I.palantir.pdf"), width=embed.width*3, height=embed.height)
-plot.landscape(df %>% dplyr::select(-entropy), "X_umap", ncol=3, smoothened = F, legend.position = c(3,3), enforce.same.color.scale = F)
+pdf(file.path(panel.path, "s8I.palantir.pdf"), width=embed.width*3, height=embed.height)
+plot.landscape(df %>% dplyr::select(-entropy), "X_umap", ncol=3, smoothened = F, legend.position = c(3,3), enforce.same.color.scale = F, data. = bulk)
 while (!is.null(dev.list()))  dev.off()
 
 
