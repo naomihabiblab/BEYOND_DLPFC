@@ -98,6 +98,7 @@ To load endophenotype associations and their meta-analysis (discovery and replic
 
 ```R
 data <- anndata::read_h5ad("2. Cell-type analysis/data/subpopulation.proportions.h5ad")
+associations <- read.xlsx(SUPP$table.3, "Endophenotype associations") %>% split(., .$cohort)
 
 data$uns$trait.analysis <- list(
   snuc = associations$discovery, 
@@ -170,7 +171,7 @@ data$uns$trajectories <- list(
   
   via = list(
     pseudotime = setNames(via$pseudotime, rownames(via)),
-    branch.probs = via[, c("prAD", "ABA", "Trajectory.3", "Trajectory.4")],
+    branch.probs = via[, c("prAD.like", "ABA.like", "Trajectory.3")] %>% `colnames<-`(gsub(".like", "", colnames(.))),
     terminals = via %>% filter(!is.na(terminal)) %>% 
       select(pseudotime, traj=terminal) %>% rownames_to_column("terminal") %>% column_to_rownames("traj"),
     user.root = via[!is.na(via$root), "root"]
