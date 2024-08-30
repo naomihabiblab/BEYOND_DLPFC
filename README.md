@@ -1,9 +1,10 @@
-# BEYOND - Uncovering trajectories of cellular change in the aged human cellular landscape
+# BEYOND - Cellular communities reveal trajectories of brain ageing and Alzheimer’s disease
 
 <p align="justify">
-To reconstruct the dynamics of the brain's cellular environment along the progression of Alzheimer's Disease, and to distinguish between AD and aging effects, we built a comprehensive cell atlas of the aged prefrontal cortex from 1.64 million single-nucleus RNA-seq profiles. We associated glial, vascular and neuronal subpopulations with AD-related traits for 437 aged individuals and aligned them along the disease cascade using causal modeling. To model the coordinated dynamics of the entire cellular environment, we devised the BEYOND methodology, which uncovered two distinct trajectories of brain aging defined by differing sequences of changes in cellular communities
+To reconstruct the dynamics of the brain's cellular environment along the progression of Alzheimer's Disease, and to distinguish between AD and aging effects, we built a comprehensive cell atlas of the aged prefrontal cortex from 1.65 million single-nucleus RNA-seq profiles. We associated glial, vascular and neuronal subpopulations with AD-related traits for 437 aged individuals and aligned them along the disease cascade using causal modeling. To model the coordinated dynamics of the entire cellular environment, we devised the BEYOND methodology, which uncovered two distinct trajectories of brain aging defined by differing sequences of changes in cellular communities
 </p>
-<p align="center"><img src="https://github.com/GreenGilad/BEYOND_DLPFC/assets/43610945/d5e52110-1bee-452d-bf8a-1c33e0ede755" width="75%"></p>
+
+<p align="center"><img src="https://github.com/user-attachments/assets/554fdf75-0160-4c8a-93e1-dd45a601cd85" width="75%"></p>
 
 <details>
 <summary>Available infomration in repository</summary>
@@ -305,6 +306,5 @@ landscape + dynamics + associations
 ---
 
 ## Citation
-- Green G. S., F. M., Yang H-S., Taga M., McCabe C., Cain A., White C. C., Schmidtner A. K., Zeng L., Wang Y., Regev A., Menon V., Bennett D. A, Habib N., De Jager P. L. Cellular dynamics across aged human brains uncover a multicellular cascade leading to Alzheimer’s disease. Preprint from bioRvix (2023). <a href="https://www.biorxiv.org/content/10.1101/2023.03.07.531493v1">doi:10.1101/2023.03.07.531493</a>
+- Green, G.S., Fujita, M., Yang, HS. et al. Cellular communities reveal trajectories of brain ageing and Alzheimer’s disease. Nature (2024). [https://doi.org/10.1038/s41586-024-07871-6](https://doi.org/10.1038/s41586-024-07871-6)
 
-## Contact Us
