@@ -305,6 +305,11 @@ landscape + dynamics + associations
 
 ---
 
+> [!IMPORTANT]
+> The code available in this repository is the code used during the analysis. This includes the use of non-publicly available information such as participant identifiers `projid`. In the published supplementary tables and data participants are identified using `individualID`. It is therefore possible that some lines of code will fail when cloning and running with the publicly available information. In such cases check if a `projid` data column is used and replace with `individualID`. In addition, when using participants' demographic/clinical information (by using the `load.metadata` function) be sure to specify loading the supplementary table and providing the correct path to the file.
+
+---
+
 ## Citation
 - Green, G.S., Fujita, M., Yang, HS. et al. Cellular communities reveal trajectories of brain ageing and Alzheimer’s disease. Nature (2024). [https://doi.org/10.1038/s41586-024-07871-6](https://doi.org/10.1038/s41586-024-07871-6)
 
