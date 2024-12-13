@@ -18,14 +18,14 @@ data <- anndata::read_h5ad("2. Cell-type analysis/data/subpopulation.proportions
 core.donors <- as.character(data$obs_names)
 
 # Loading list of snRNA-seq participants, while correcting mistakes in tracker file
-snuc.donors <- openxlsx::read.xlsx("5. Manuscript code/data/ROSMAP 10X Processing Tracker.xlsx", sheet = "Processed Batches") %>%
+snuc.donors <- openxlsx::read.xlsx("1. Library preprocessing/data/ROSMAP 10X Processing Tracker.xlsx", sheet = "Processed Batches") %>%
   filter(!Batch %in% c("B1", "B2", "B3") & (!StudyCode %in% c("MAP83034844", "MAP74718818"))) %>%
   pull(StudyCode) %>% unique %>% gsub("ROS|MAP", "", .) %>% as.numeric %>% as.character
 snuc.donors <- c(snuc.donors, "44299049")
 
 bulk.donors <- data$uns$celmod$avg.predicted.prop$validation$index
 
-donor.mapping <- read.csv("5. Manuscript code/data/ROSMAP_clinical.csv") %>% dplyr::select(projid, individualID)
+donor.mapping <- read.csv("1. Library preprocessing/data/ROSMAP.id.mapping.csv") %>% dplyr::select(projid, individualID)
 donor.mapping <- setNames(donor.mapping$individualID, donor.mapping$projid)
 data$obs_names <- as.character(donor.mapping[data$obs_names])
 

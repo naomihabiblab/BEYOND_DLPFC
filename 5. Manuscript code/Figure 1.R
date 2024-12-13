@@ -1,17 +1,26 @@
 source("5. Manuscript code/utils.R")
 source("1. Library preprocessing/utils/ROSMAP.metadata.R")
 
+# Original analysis code: 
 # Loading list of snRNA-seq participants, while correcting mistakes in tracker file
-participants <- openxlsx::read.xlsx("5. Manuscript code/data/ROSMAP 10X Processing Tracker.xlsx", sheet = "Processed Batches") %>%
+participants <- openxlsx::read.xlsx("1. Library preprocessing/data/ROSMAP 10X Processing Tracker.xlsx", sheet = "Processed Batches") %>%
   filter(!Batch %in% c("B1", "B2", "B3") & (!StudyCode %in% c("MAP83034844", "MAP74718818"))) %>%
   mutate(StudyCode = as.character(as.numeric(gsub("ROS|MAP", "", StudyCode)))) %>% 
   select(StudyCode, Batch) %>%
   rbind(data.frame(StudyCode="44299049", Batch=55))
 
-
 # The following loads ROSMAP participants' demographic- and endophenotypic characterization 
 # Parts of these data are available in supplementary table 1
 cohort <- load.metadata() %>% `[`(unique(participants$StudyCode), )
+
+# When reproducing the figures below from the publicly available data and supplementary tables 
+# please use the code below. It produces the same information using files where information for internal use was removed.
+#     participants <- read.csv("1. Library preprocessing/data/ROSMAP 10X Processing Tracker.csv")
+#     cohort <- load.metadata(
+#           path = "5. Manuscript code/data/Supplementary Table 1 - Participants Clinicopathological Characteristics.xlsx",
+#           sheet = "Discovery cohort",
+#           from.supplementary.table = TRUE) %>%
+#         `[`(unique(participants$StudyCode), )
 
 #####################################################################################################################
 #                                          Figure 1 - Cohort & Atlas Overview                                       #
